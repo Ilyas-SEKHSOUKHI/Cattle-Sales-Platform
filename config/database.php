@@ -1,7 +1,7 @@
 <?php
     //Connexion a MySQL
     $host="localhost";
-    $dbname="";
+    $dbname="tarmast_db";
     $user="root";
     $password="";
 
