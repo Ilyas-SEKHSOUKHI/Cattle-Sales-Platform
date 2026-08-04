@@ -1,0 +1,3 @@
+<?php
+    //Tableau de bord
+?>

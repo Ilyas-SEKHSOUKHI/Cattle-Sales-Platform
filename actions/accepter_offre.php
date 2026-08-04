@@ -1,0 +1,3 @@
+<?php
+    // Accepte une offre
+?>

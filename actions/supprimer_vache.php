@@ -1,0 +1,3 @@
+<?php
+    //Supprime une vache
+?>
