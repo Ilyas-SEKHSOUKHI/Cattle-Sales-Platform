@@ -31,7 +31,7 @@ if (isset($_POST['login'])) {
         if ($utilisateur['role'] === 'admin') {
             header('Location: ../admin/dashboard.php');
         } else {
-            header('Location: ../acheteur/dashboard.php');
+            header('Location: ../client/accueil.php');
         }
         exit;
 

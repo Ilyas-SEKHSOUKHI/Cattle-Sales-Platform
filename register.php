@@ -2,25 +2,211 @@
     //Affiche le formulaire d'inscription
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="icon" type="image/x-icon" href="">
-    <title>Register</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/x-icon" href="">
+<title>Inscription — Ferme Tarmast</title>
+<style>
+  :root{
+    --forest: #1B3A2B;
+    --forest-2: #142A20;
+    --cream: #FBF6EC;
+    --cream-2: #F2EAD8;
+    --green: #4CAF50;
+    --green-dark: #3d9140;
+    --ochre: #C9902F;
+    --rust: #A6512E;
+    --ink: #2A2A25;
+    --ink-soft: #5C5B52;
+    --line: #E3D9C2;
+    --display: "Fraunces", Georgia, serif;
+    --body: "Work Sans", Arial, Helvetica, sans-serif;
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html, body{ height: auto; min-height: 100%; }
+
+  body{
+    font-family: var(--body);
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 2rem 1rem;
+    position: relative;
+  }
+
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    z-index: -1;
+    background:
+      radial-gradient(600px 300px at 85% 10%, rgba(201,144,47,.14), transparent 70%),
+      radial-gradient(500px 260px at 10% 90%, rgba(76,175,80,.10), transparent 70%);
+    pointer-events:none;
+  }
+
+  a{ color: inherit; text-decoration:none; }
+
+  .auth-wrap{
+    width: 100%;
+    max-width: 420px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .brand{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:.6rem;
+    font-family: var(--display);
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--forest);
+    margin-bottom: 2rem;
+  }
+  .brand-mark{ width: 38px; height: 38px; flex-shrink: 0; }
+
+  .auth-card{
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(27,58,43,.12);
+    padding: 1.9rem 1.8rem 1.7rem;
+  }
+
+  .auth-card h2{
+    font-family: var(--display);
+    color: var(--forest);
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: .3rem;
+    text-align:center;
+  }
+  .auth-sub{
+    text-align:center;
+    color: var(--ink-soft);
+    font-size: .87rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .field{ margin-bottom: 1rem; }
+  .field label{
+    display:block;
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--forest);
+    margin-bottom: .35rem;
+  }
+  .field input{
+    width: 100%;
+    padding: .65rem .85rem;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    background: var(--cream-2);
+    font-family: var(--body);
+    font-size: .95rem;
+    color: var(--ink);
+    transition: border-color .2s, background .2s;
+  }
+  .field input:focus{
+    outline: none;
+    border-color: var(--green);
+    background: #fff;
+  }
+
+  .auth-submit{
+    width: 100%;
+    padding: .85rem 1.2rem;
+    border: none;
+    border-radius: 10px;
+    background: var(--green);
+    color: #fff;
+    font-family: var(--body);
+    font-weight: 700;
+    font-size: .96rem;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(76,175,80,.28);
+    transition: background .25s, transform .15s;
+    margin-top: .4rem;
+  }
+  .auth-submit:hover{ background: var(--green-dark); transform: translateY(-1px); }
+
+  .auth-switch{
+    text-align:center;
+    margin-top: 1.6rem;
+    font-size: .9rem;
+    color: var(--ink-soft);
+  }
+  .auth-switch a{
+    color: var(--green-dark);
+    font-weight: 700;
+  }
+  .auth-switch a:hover{ text-decoration: underline; }
+
+  .back-home{
+    display:flex;
+    justify-content:center;
+    margin-top: 1.6rem;
+    font-size: .85rem;
+    color: var(--ink-soft);
+  }
+  .back-home a:hover{ color: var(--forest); }
+
+  :focus-visible{ outline: 3px solid var(--ochre); outline-offset: 3px; }
+</style>
 </head>
 <body>
+
+<div class="auth-wrap">
+  <a href="index.php" class="brand">
+    <svg class="brand-mark" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="24" cy="24" r="23" fill="#4CAF50" opacity="0.12"/>
+      <path d="M14 22c0-2 1.5-3.5 3.5-3.5 1 0 1.8.4 2.5 1 1-1.3 2.5-2 4-2s3 .7 4 2c.7-.6 1.5-1 2.5-1 2 0 3.5 1.5 3.5 3.5 0 1-.4 2-1 2.6.6.5 1 1.3 1 2.2 0 2-1.7 3.7-3.7 3.7H18.7C16.7 30.5 15 28.8 15 26.8c0-.9.4-1.7 1-2.2-.6-.6-1-1.6-1-2.6z" fill="#1B3A2B"/>
+      <circle cx="20" cy="25" r="1.4" fill="#fff"/>
+      <circle cx="28" cy="25" r="1.4" fill="#fff"/>
+      <path d="M22.5 27.5c.5.6 1.5.6 2 0" stroke="#fff" stroke-width="1" stroke-linecap="round"/>
+    </svg>
+    Ferme Tarmast
+  </a>
+
+  <div class="auth-card">
+    <h2>Inscription</h2>
+    <p class="auth-sub">Créez votre compte pour proposer un prix sur le cheptel.</p>
+
     <form action="actions/register.php" method="POST">
-        <h2>Inscription</h2>
-        <label>Nom</label>
-        <input type="text" name="nom" id="inputNomRegister" required><br>
-        <label>Email</label>
-        <input type="email" name="email" id="inputEmailRegister" required><br>
-        <label>Password</label>
-        <input type="password" name="mot_de_passe" id="inputPasswordRegister" required><br>
-        <input type="submit" name="register" id="registerSubmit">
-        <a href="login.php">Login</a>
+        <div class="field">
+            <label for="inputNomRegister">Nom</label>
+            <input type="text" name="nom" id="inputNomRegister" required>
+        </div>
+        <div class="field">
+            <label for="inputEmailRegister">Email</label>
+            <input type="email" name="email" id="inputEmailRegister" required>
+        </div>
+        <div class="field">
+            <label for="inputPasswordRegister">Mot de passe</label>
+            <input type="password" name="mot_de_passe" id="inputPasswordRegister" required>
+        </div>
+        <input type="submit" name="register" id="registerSubmit" class="auth-submit" value="S'inscrire">
     </form>
+
+    <p class="auth-switch">Déjà un compte ? <a href="login.php">Connexion</a></p>
+  </div>
+
+  <div class="back-home">
+    <a href="index.php">&larr; Retour à l'accueil</a>
+  </div>
+</div>
+
 </body>
 </html>
