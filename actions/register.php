@@ -1,20 +1,58 @@
 <?php
-    if(isset($_POST['register'])){
-        // Recuperation des donnee
-        $nom = $_POST['nom'];
-        $email = $_POST['email'];
-        $password = $_POST['mot_de_passe'];
+require '../config/database.php';
 
-        // Validation du nom
-        $nom = filter_input(INPUT_POST,'nom',FILTER_SANITIZE_SPECIAL_CHARS);
+if (isset($_POST['register'])) {
 
-        // Validation du mail
-        $email = filter_input(INPUT_POST,'email',FILTER_VALIDATE_EMAIL);
+    $nom = filter_input(INPUT_POST, 'nom', FILTER_SANITIZE_SPECIAL_CHARS);
+    $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
+    $mot_de_passe = $_POST['mot_de_passe'] ?? '';
 
-        // Password Hash
-        $hash = password_hash($password,PASSWORD_DEFAULT);
+    // --- Validation ---
+    $errors = [];
 
-        // Rediriger vers login.php
-        //a continuer
+    if (empty($nom)) {
+        $errors[] = "Le nom est obligatoire.";
     }
-?>
+    if (!$email) {
+        $errors[] = "L'email n'est pas valide.";
+    }
+    if (strlen($mot_de_passe) < 8) {
+        $errors[] = "Le mot de passe doit contenir au moins 8 caractères.";
+    }
+
+    if (!empty($errors)) {
+        foreach ($errors as $e) {
+            echo $e . "<br>";
+        }
+        exit;
+    }
+
+    // --- Vérifier que l'email n'existe pas déjà ---
+    $check = $pdo->prepare("SELECT id FROM utilisateurs WHERE email = :email");
+    $check->execute([':email' => $email]);
+
+    if ($check->fetch()) {
+        echo "Cet email est déjà utilisé.";
+        exit;
+    }
+
+    // --- Hash du mot de passe ---
+    $hash = password_hash($mot_de_passe, PASSWORD_DEFAULT);
+
+    // --- Insertion ---
+    // Le rôle n'est PAS pris depuis le formulaire.
+    // La colonne "role" a un DEFAULT 'acheteur' dans la table,
+    // donc on ne l'insère pas du tout ici : MySQL s'en charge.
+    $stmt = $pdo->prepare("INSERT INTO utilisateurs (nom, email, mot_de_passe) VALUES (:nom, :email, :mot_de_passe)");
+
+    try {
+        $stmt->execute([
+            ':nom' => $nom,
+            ':email' => $email,
+            ':mot_de_passe' => $hash,
+        ]);
+        echo "Utilisateur ajouté avec succès";
+    } catch (PDOException $e) {
+        echo "Erreur lors de l'inscription : " . $e->getMessage();
+    }
+}
