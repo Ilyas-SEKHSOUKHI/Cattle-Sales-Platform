@@ -8,8 +8,29 @@ requireAdmin();
 $adminNom = $_SESSION['nom'];
 $adminId = (int) $_SESSION['user_id'];
 
-$stmt = $pdo->prepare('SELECT id, nom, bovin, date_naissance, age, poids, image, statut FROM vaches WHERE id_admin = :id_admin ORDER BY id DESC');
-$stmt->execute([':id_admin' => $adminId]);
+$filtre = $_GET['filtre'] ?? 'tous';
+$statutsVaches = ['disponible', 'vendue'];
+
+if (!in_array($filtre, array_merge(['tous'], $statutsVaches), true)) {
+    $filtre = 'tous';
+}
+
+$sql = 'SELECT id, nom, bovin, date_naissance, age, poids, image, statut FROM vaches WHERE id_admin = :id_admin';
+
+if ($filtre !== 'tous') {
+    $sql .= ' AND statut = :statut';
+}
+
+$sql .= ' ORDER BY id DESC';
+
+$stmt = $pdo->prepare($sql);
+$params = [':id_admin' => $adminId];
+
+if ($filtre !== 'tous') {
+    $params[':statut'] = $filtre;
+}
+
+$stmt->execute($params);
 $vaches = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
@@ -368,9 +389,9 @@ $vaches = $stmt->fetchAll(PDO::FETCH_ASSOC);
           <p><?php echo count($vaches); ?> fiche(s) enregistrée(s)</p>
         </div>
         <div class="filters">
-          <a href="?filtre=tous" class="filter-chip active">Tous</a>
-          <a href="?filtre=disponible" class="filter-chip">Disponibles</a>
-          <a href="?filtre=vendue" class="filter-chip">Vendues</a>
+          <a href="?filtre=tous" class="filter-chip <?php echo $filtre === 'tous' ? 'active' : ''; ?>">Tous</a>
+          <a href="?filtre=disponible" class="filter-chip <?php echo $filtre === 'disponible' ? 'active' : ''; ?>">Disponibles</a>
+          <a href="?filtre=vendue" class="filter-chip <?php echo $filtre === 'vendue' ? 'active' : ''; ?>">Vendues</a>
         </div>
       </div>
 

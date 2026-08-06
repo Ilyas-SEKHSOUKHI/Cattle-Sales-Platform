@@ -8,16 +8,34 @@ requireAdmin();
 $adminNom = $_SESSION['nom'];
 $adminId = (int) $_SESSION['user_id'];
 
-$offresStmt = $pdo->prepare(
-    'SELECT o.id, o.montant_propose AS montant, o.date_offre AS date, o.statut,
-            u.nom AS acheteur, u.email, u.telephone, v.nom AS vache
-     FROM offres o
-     JOIN utilisateurs u ON o.id_utilisateur = u.id
-     JOIN vaches v ON o.id_vache = v.id
-     WHERE v.id_admin = :id_admin
-     ORDER BY o.date_offre DESC'
-);
-$offresStmt->execute([':id_admin' => $adminId]);
+$filtre = $_GET['filtre'] ?? 'tous';
+$statutsOffres = ['en_attente', 'acceptee', 'refusee'];
+
+if (!in_array($filtre, array_merge(['tous'], $statutsOffres), true)) {
+    $filtre = 'tous';
+}
+
+$sql = 'SELECT o.id, o.montant_propose AS montant, o.date_offre AS date, o.statut,
+               u.nom AS acheteur, u.email, u.telephone, v.nom AS vache
+        FROM offres o
+        JOIN utilisateurs u ON o.id_utilisateur = u.id
+        JOIN vaches v ON o.id_vache = v.id
+        WHERE v.id_admin = :id_admin';
+
+if ($filtre !== 'tous') {
+    $sql .= ' AND o.statut = :statut';
+}
+
+$sql .= ' ORDER BY o.date_offre DESC';
+
+$offresStmt = $pdo->prepare($sql);
+$params = [':id_admin' => $adminId];
+
+if ($filtre !== 'tous') {
+    $params[':statut'] = $filtre;
+}
+
+$offresStmt->execute($params);
 $offres = $offresStmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
@@ -385,10 +403,10 @@ $offres = $offresStmt->fetchAll(PDO::FETCH_ASSOC);
           <p><?php echo count($offres); ?> offre(s) au total</p>
         </div>
         <div class="filters">
-          <a href="?filtre=tous" class="filter-chip active">Toutes</a>
-          <a href="?filtre=en_attente" class="filter-chip">En attente</a>
-          <a href="?filtre=acceptee" class="filter-chip">Acceptées</a>
-          <a href="?filtre=refusee" class="filter-chip">Refusées</a>
+          <a href="?filtre=tous" class="filter-chip <?php echo $filtre === 'tous' ? 'active' : ''; ?>">Toutes</a>
+          <a href="?filtre=en_attente" class="filter-chip <?php echo $filtre === 'en_attente' ? 'active' : ''; ?>">En attente</a>
+          <a href="?filtre=acceptee" class="filter-chip <?php echo $filtre === 'acceptee' ? 'active' : ''; ?>">Acceptées</a>
+          <a href="?filtre=refusee" class="filter-chip <?php echo $filtre === 'refusee' ? 'active' : ''; ?>">Refusées</a>
         </div>
       </div>
 
