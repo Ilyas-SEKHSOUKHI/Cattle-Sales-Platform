@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ferme Tarmast — par Jibal</title>
+<title>Ferme Tarmast — Le prix se discute, pas s'impose</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -262,6 +262,15 @@
       linear-gradient(180deg, rgba(27,58,43,.0), rgba(27,58,43,.35)),
       linear-gradient(135deg, #cfe7c9, #a9cf9f);
     position: relative;
+    overflow: hidden;
+  }
+  /* Vraie photo de vache : dépose ton fichier dans assets/images/
+     (ex. vache-exemple.jpg) — si l'image est absente, le SVG de secours
+     et le fond dégradé restent visibles automatiquement. */
+  .listing-photo .cow-photo{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit: cover;
   }
   .listing-photo .cow-svg{ position:absolute; inset:0; margin:auto; width: 64%; }
   .listing-tag{
@@ -274,6 +283,7 @@
     letter-spacing:.04em;
     padding: .3rem .6rem;
     border-radius: 999px;
+    z-index: 2;
   }
   .listing-body{ padding: 1.2rem 1.3rem 1.4rem; }
   .listing-body h4{
@@ -469,7 +479,7 @@
   }
   .product-card p{ font-size: .88rem; color: var(--ink-soft); }
 
-  /* ---- About Jibal ---- */
+  /* ---- About the farm ---- */
   .about{
     background: var(--cream-2);
   }
@@ -489,15 +499,22 @@
     align-items:center;
     justify-content:center;
   }
-  .about-visual svg{ width: 62%; }
+  .about-visual img{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit: cover;
+    opacity: .9;
+  }
+  .about-visual svg{ width: 62%; position:relative; z-index:1; }
   .about-visual::after{
-    content:"Tarmast · Maroc";
+    content:"Ferme Tarmast · Maroc";
     position:absolute;
     bottom: 1.1rem; left: 1.3rem;
     color: #EFE9DA;
     font-family: var(--display);
     font-size: .95rem;
     letter-spacing: .03em;
+    z-index: 2;
   }
   .about-text h2{ margin-bottom: 1.1rem; }
   .about-text p{ color: var(--ink-soft); margin-bottom: 1rem; }
@@ -655,12 +672,12 @@
 <section class="hero">
   <div class="container">
     <div class="hero-copy">
-      <span class="eyebrow"><span class="dot"></span> Jibal · Élevage &amp; produits laitiers, Maroc</span>
+      <span class="eyebrow"><span class="dot"></span> Ferme laitière · Maroc</span>
       <h1>Achetez une vache <em>directement à la ferme.</em><br>Vous proposez le prix.</h1>
       <p class="lead">
-        Jibal produit tout ce qui touche au lait. Ferme Tarmast est la vitrine où l'entreprise
-        met en vente les vaches de son usine quand elle le souhaite — vous parcourez le cheptel
-        disponible et envoyez votre offre, en toute transparence.
+        Ferme Tarmast élève son propre cheptel et produit tout ce qui touche au lait. Quand
+        l'exploitation décide de vendre une vache, elle publie sa fiche ici — vous parcourez
+        le cheptel disponible et envoyez votre offre, en toute transparence.
       </p>
       <div class="hero-ctas">
         <a href="#cheptel" class="btn btn-register btn-lg">Voir le cheptel disponible</a>
@@ -668,7 +685,7 @@
       </div>
       <ul class="trust-row">
         <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> Vaches suivies et fichées individuellement</li>
-        <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> Offres validées par Jibal</li>
+        <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> Offres validées directement par la ferme</li>
       </ul>
     </div>
 
@@ -684,6 +701,14 @@
       <div class="listing-card">
         <div class="listing-photo">
           <span class="listing-tag">N° 0231 · Disponible</span>
+
+          <!-- Vraie photo : remplace le src par le fichier de la vache
+               (ex. uploads/vaches/0231.jpg). Si le fichier est manquant,
+               cette balise disparaît et le SVG + fond dégradé prennent le relais. -->
+          <img class="cow-photo" src="assets/images/vache-exemple.jpg"
+               alt="Vache laitière disponible à la Ferme Tarmast"
+               onerror="this.style.display='none'">
+
           <svg class="cow-svg" viewBox="0 0 200 140" fill="none" xmlns="http://www.w3.org/2000/svg">
             <ellipse cx="100" cy="90" rx="70" ry="34" fill="#F2EAD8"/>
             <ellipse cx="60" cy="70" rx="16" ry="20" fill="#F2EAD8"/>
@@ -691,7 +716,6 @@
             <path d="M46 50c-2-6 2-10 6-8M64 50c2-6-2-10-6-8" stroke="#1B3A2B" stroke-width="2" stroke-linecap="round"/>
             <ellipse cx="120" cy="95" rx="14" ry="9" fill="#A6512E" opacity=".7"/>
             <ellipse cx="90" cy="95" rx="10" ry="12" fill="#1B3A2B" opacity=".55"/>
-            <path d="M18 95c0 22 30 34 82 34s82-12 82-34" stroke="none"/>
             <path d="M40 118l0 14M70 122l0 14M110 122l0 14M140 118l0 14" stroke="#1B3A2B" stroke-width="6" stroke-linecap="round"/>
           </svg>
         </div>
@@ -727,7 +751,7 @@
     </div>
     <div>
       <div class="num">12 ans</div>
-      <div class="lbl">d'expérience Jibal</div>
+      <div class="lbl">d'activité</div>
     </div>
     <div>
       <div class="num">6 régions</div>
@@ -742,7 +766,7 @@
     <div class="section-head">
       <span class="eyebrow"><span class="dot"></span> Le processus</span>
       <h2>Trois étapes, du cheptel à la vente</h2>
-      <p>Chaque vache dispose de sa propre fiche. Vous consultez, vous proposez, Jibal décide — sans intermédiaire caché.</p>
+      <p>Chaque vache dispose de sa propre fiche. Vous consultez, vous proposez, la ferme décide — sans intermédiaire caché.</p>
     </div>
 
     <div class="steps">
@@ -760,8 +784,8 @@
       </div>
       <div class="step">
         <span class="step-num">03</span>
-        <h3>Jibal valide la vente</h3>
-        <p>L'entreprise accepte, ajuste ou décline votre offre. Une fois validée, la vente est conclue.</p>
+        <h3>La ferme valide la vente</h3>
+        <p>Ferme Tarmast accepte, ajuste ou décline votre offre. Une fois validée, la vente est conclue.</p>
       </div>
     </div>
   </div>
@@ -772,8 +796,8 @@
   <div class="container">
     <div class="section-head">
       <span class="eyebrow"><span class="dot"></span> Au-delà du cheptel</span>
-      <h2>Ce que produit Jibal</h2>
-      <p>Le lait de la ferme Tarmast alimente aussi une gamme de produits laitiers, préparés selon un savoir-faire local.</p>
+      <h2>Ce que produit la ferme</h2>
+      <p>Le lait de Ferme Tarmast alimente aussi une gamme de produits laitiers, préparés selon un savoir-faire local.</p>
     </div>
 
     <div class="products-grid">
@@ -809,6 +833,9 @@
 <section class="about" id="apropos">
   <div class="container">
     <div class="about-visual">
+      <!-- Vraie photo de la ferme : remplace le src ci-dessous.
+           Si absente, l'illustration SVG reste visible en fond. -->
+      <img src="assets/images/ferme-tarmast.jpg" alt="Vue de la Ferme Tarmast" onerror="this.style.display='none'">
       <svg viewBox="0 0 200 170" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M20 130c40-40 120-40 160 0" stroke="#EFE9DA" stroke-width="2" stroke-dasharray="4 6" opacity=".4"/>
         <path d="M30 100l40-50 40 50" stroke="#EFE9DA" stroke-width="3" fill="none" opacity=".5"/>
@@ -819,19 +846,19 @@
     </div>
     <div class="about-text">
       <span class="eyebrow"><span class="dot"></span> À propos</span>
-      <h2>Jibal, une entreprise laitière marocaine</h2>
+      <h2>Ferme Tarmast, une exploitation laitière marocaine</h2>
       <p>
-        Jibal produit tout ce qui touche au lait : collecte, transformation et distribution de produits laitiers
-        à travers le Maroc. La ferme Tarmast fait partie de son outil de production — c'est là que vit le cheptel.
+        Ferme Tarmast produit tout ce qui touche au lait : collecte, transformation et distribution
+        de produits laitiers à travers le Maroc. Le cheptel vit et est suivi directement sur place.
       </p>
       <p>
-        Il arrive que l'entreprise choisisse de vendre certaines vaches de la ferme. Ferme Tarmast permet
-        alors à Jibal d'ajouter ou de retirer une vache du marché à tout moment, et aux acheteurs de proposer
+        Il arrive que la ferme choisisse de vendre certaines de ses vaches. Cette plateforme permet
+        alors d'ajouter ou de retirer une vache du marché à tout moment, et aux acheteurs de proposer
         directement leur prix sur chaque fiche.
       </p>
       <ul class="about-list">
-        <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> Gestion du cheptel entièrement contrôlée par Jibal</li>
-        <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> Vente déclenchée uniquement quand l'entreprise le décide</li>
+        <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> Gestion du cheptel entièrement contrôlée par la ferme</li>
+        <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> Vente déclenchée uniquement quand l'exploitation le décide</li>
         <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> Offres d'achat transparentes, fiche par fiche</li>
       </ul>
     </div>
@@ -863,7 +890,7 @@
           <svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="23" fill="#4CAF50" opacity="0.18"/><path d="M14 22c0-2 1.5-3.5 3.5-3.5 1 0 1.8.4 2.5 1 1-1.3 2.5-2 4-2s3 .7 4 2c.7-.6 1.5-1 2.5-1 2 0 3.5 1.5 3.5 3.5 0 1-.4 2-1 2.6.6.5 1 1.3 1 2.2 0 2-1.7 3.7-3.7 3.7H18.7C16.7 30.5 15 28.8 15 26.8c0-.9.4-1.7 1-2.2-.6-.6-1-1.6-1-2.6z" fill="#fff"/></svg>
           Ferme Tarmast
         </div>
-        <p class="desc">Une plateforme Jibal pour la gestion et la vente du cheptel laitier, au Maroc.</p>
+        <p class="desc">Une plateforme pour la gestion et la vente du cheptel laitier, au Maroc.</p>
       </div>
       <div>
         <h5>Plateforme</h5>
@@ -874,23 +901,22 @@
         </ul>
       </div>
       <div>
-        <h5>Entreprise</h5>
+        <h5>Ferme</h5>
         <ul>
-          <li><a href="#apropos">À propos de Jibal</a></li>
-          <li><a href="#">Ferme Tarmast</a></li>
+          <li><a href="#apropos">À propos de la ferme</a></li>
           <li><a href="#contact">Contact</a></li>
         </ul>
       </div>
       <div>
         <h5>Compte</h5>
         <ul>
-          <li><a href="#">Connexion</a></li>
-          <li><a href="#">Inscription</a></li>
+          <li><a href="login.php">Connexion</a></li>
+          <li><a href="register.php">Inscription</a></li>
         </ul>
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Jibal — Ferme Tarmast. Tous droits réservés.</span>
+      <span>© 2026 Ferme Tarmast. Tous droits réservés.</span>
       <span>Maroc</span>
     </div>
   </div>
