@@ -795,34 +795,34 @@
   <div class="container">
     <div class="section-head">
       <span class="eyebrow"><span class="dot"></span> Au-delà du cheptel</span>
-      <h2>Ce que produit la ferme</h2>
-      <p>Le lait de Ferme Tarmast alimente aussi une gamme de produits laitiers, préparés selon un savoir-faire local.</p>
+      <h2>Nos produit</h2>
+      <p>Découvrez les catégories de bovins disponibles à Ferme Tarmast, de la vache au bœuf.</p>
     </div>
 
     <div class="products-grid">
       <div class="product-card">
-        <svg class="product-icon" viewBox="0 0 48 48" fill="none"><path d="M18 8h12l2 8-3 4v16a4 4 0 01-4 4h-2a4 4 0 01-4-4V20l-3-4 2-8z" stroke="#1B3A2B" stroke-width="2"/></svg>
-        <span class="code">LOT LT-01</span>
+        <img src="assets/images/icon_vache.png" alt="" style="border-radius: 10px;">
+        <span class="code">CAT 01</span>
         <h4>Lait cru</h4>
-        <p>Collecté chaque matin, livré frais dans la journée.</p>
+        <p>Vache de race laitière sélectionnée pour sa production.</p>
       </div>
       <div class="product-card">
-        <svg class="product-icon" viewBox="0 0 48 48" fill="none"><rect x="12" y="18" width="24" height="18" rx="2" stroke="#1B3A2B" stroke-width="2"/><path d="M16 18v-4a4 4 0 014-4h8a4 4 0 014 4v4" stroke="#1B3A2B" stroke-width="2"/></svg>
-        <span class="code">LOT ZB-04</span>
-        <h4>Zebda (beurre fermier)</h4>
-        <p>Barattage traditionnel, sans additifs.</p>
+        <img src="assets/images/icon_vache.png" alt="" style="border-radius: 10px;">
+        <span class="code">CAT 02</span>
+        <h4>Vache</h4>
+        <p>Femelle adulte élevée pour la reproduction et la production.</p>
       </div>
       <div class="product-card">
-        <svg class="product-icon" viewBox="0 0 48 48" fill="none"><path d="M10 30l14-18 14 18v6a2 2 0 01-2 2H12a2 2 0 01-2-2v-6z" stroke="#1B3A2B" stroke-width="2"/></svg>
-        <span class="code">LOT JB-02</span>
-        <h4>Jben (fromage frais)</h4>
-        <p>Fabriqué le jour même de la collecte du lait.</p>
+        <img src="assets/images/icon_vache.png" alt="" style="border-radius: 10px;">
+        <span class="code">CAT 03</span>
+        <h4>Veau</h4>
+        <p>Jeune bovin en croissance, prêt à rejoindre le cheptel.</p>
       </div>
       <div class="product-card">
-        <svg class="product-icon" viewBox="0 0 48 48" fill="none"><path d="M20 8h8v6l4 6v18a2 2 0 01-2 2H18a2 2 0 01-2-2V20l4-6V8z" stroke="#1B3A2B" stroke-width="2"/></svg>
-        <span class="code">LOT LB-07</span>
-        <h4>Lben (petit-lait)</h4>
-        <p>Rafraîchissant, préparé à partir du lait de la ferme.</p>
+        <img src="assets/images/icon_vache.png" alt="" style="border-radius: 10px;">
+        <span class="code">CAT 04</span>
+        <h4>Velle / Genisse / Bœuf</h4>
+        <p>Variantes du cheptel selon l’âge, le sexe et l’usage.</p>
       </div>
     </div>
   </div>
@@ -871,7 +871,7 @@
   <div class="container">
     <div class="cta-band">
       <h2>Prêt à consulter le cheptel de Ferme Tarmast ?</h2>
-      <p>Créez votre compte pour proposer un prix sur une vache, ou connectez-vous si vous en avez déjà un.</p>
+      <p>Créez votre compte pour proposer un prix sur un bovin, ou connectez-vous si vous en avez déjà un.</p>
       <div class="cta-actions">
         <a href="#" class="btn btn-cream btn-lg">Créer un compte</a>
         <a href="#" class="btn btn-outline-light btn-lg">Se connecter</a>

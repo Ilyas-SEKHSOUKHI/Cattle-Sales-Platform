@@ -209,28 +209,29 @@ $offresRecentes = $offresStmt->fetchAll(PDO::FETCH_ASSOC);
     margin-bottom: 2.4rem;
   }
   .stat-card{
-    background:#fff;
+    background: linear-gradient(135deg, #3f8f42 0%, #173425 100%);
     border:1px solid var(--line);
-    border-radius: 16px;
-    padding: 1.4rem 1.4rem;
+    border-radius: 14px;
+    padding: 1rem 1rem;
     display:flex;
     flex-direction:column;
-    gap: .7rem;
+    gap: .55rem;
+    box-shadow: 0 6px 14px rgba(0,0,0,.12);
   }
   .stat-top{ display:flex; align-items:center; justify-content:space-between; }
   .stat-icon{
-    width: 40px; height:40px;
-    border-radius: 10px;
+    width: 34px; height:34px;
+    border-radius: 8px;
     display:flex; align-items:center; justify-content:center;
     flex-shrink:0;
   }
   .stat-icon svg{ width:20px; height:20px; }
-  .stat-icon.green{ background: rgba(76,175,80,.12); color: var(--green-dark); }
-  .stat-icon.ochre{ background: rgba(201,144,47,.14); color: var(--ochre); }
-  .stat-icon.rust{ background: rgba(166,81,46,.12); color: var(--rust); }
-  .stat-icon.forest{ background: rgba(27,58,43,.10); color: var(--forest); }
-  .stat-num{ font-family: var(--display); font-size: 1.7rem; font-weight:700; color: var(--forest); }
-  .stat-lbl{ font-size:.85rem; color: var(--ink-soft); }
+  .stat-icon.green{ background: rgba(255,255,255,.22); color: #fff; }
+  .stat-icon.ochre{ background: rgba(255,255,255,.22); color: #fff; }
+  .stat-icon.rust{ background: rgba(255,255,255,.22); color: #fff; }
+  .stat-icon.forest{ background: rgba(255,255,255,.22); color: #fff; }
+  .stat-num{ font-family: var(--display); font-size: 1.35rem; font-weight:700; color: #fff; }
+  .stat-lbl{ font-size:.78rem; color: #fff; opacity: .95; }
 
   /* ---------- PANEL / TABLE ---------- */
   .panel{
