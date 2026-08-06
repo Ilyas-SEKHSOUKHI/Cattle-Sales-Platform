@@ -264,9 +264,8 @@
     position: relative;
     overflow: hidden;
   }
-  /* Vraie photo de vache : dépose ton fichier dans assets/images/
-     (ex. vache-exemple.jpg) — si l'image est absente, le SVG de secours
-     et le fond dégradé restent visibles automatiquement. */
+  /* Photo de vache : assets/images/Vache.jpg
+     Si l'image est absente, le SVG de secours reste visible. */
   .listing-photo .cow-photo{
     position:absolute; inset:0;
     width:100%; height:100%;
@@ -702,13 +701,11 @@
         <div class="listing-photo">
           <span class="listing-tag">N° 0231 · Disponible</span>
 
-          <!-- Vraie photo : remplace le src par le fichier de la vache
-               (ex. uploads/vaches/0231.jpg). Si le fichier est manquant,
-               cette balise disparaît et le SVG + fond dégradé prennent le relais. -->
-          <img class="cow-photo" src="assets/images/vache-exemple.jpg"
+          <!-- Photo : assets/images/Vache.jpg — SVG de secours si fichier absent -->
+          <img class="cow-photo" src="assets/images/Vache.jpg"
                alt="Vache laitière disponible à la Ferme Tarmast"
                onerror="this.style.display='none'">
-
+          <!--
           <svg class="cow-svg" viewBox="0 0 200 140" fill="none" xmlns="http://www.w3.org/2000/svg">
             <ellipse cx="100" cy="90" rx="70" ry="34" fill="#F2EAD8"/>
             <ellipse cx="60" cy="70" rx="16" ry="20" fill="#F2EAD8"/>
@@ -717,7 +714,7 @@
             <ellipse cx="120" cy="95" rx="14" ry="9" fill="#A6512E" opacity=".7"/>
             <ellipse cx="90" cy="95" rx="10" ry="12" fill="#1B3A2B" opacity=".55"/>
             <path d="M40 118l0 14M70 122l0 14M110 122l0 14M140 118l0 14" stroke="#1B3A2B" stroke-width="6" stroke-linecap="round"/>
-          </svg>
+          </svg>-->
         </div>
         <div class="listing-body">
           <h4>Vache laitière — Holstein</h4>
