@@ -673,7 +673,7 @@
   <div class="container">
     <div class="hero-copy">
       <span class="eyebrow"><span class="dot"></span> Ferme laitière · Maroc</span>
-      <h1>Achetez une vache <em>directement à la ferme.</em><br>Vous proposez le prix.</h1>
+      <h1>Achetez un bovin <em>directement à la ferme.</em><br>Vous proposez le prix.</h1>
       <p class="lead">
         Ferme Tarmast élève son propre cheptel et produit tout ce qui touche au lait. Quand
         l'exploitation décide de vendre une vache, elle publie sa fiche ici — vous parcourez
