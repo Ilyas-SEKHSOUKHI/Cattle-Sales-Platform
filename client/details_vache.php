@@ -160,6 +160,14 @@ $offre_existante = $offreStmt->fetch(PDO::FETCH_ASSOC) ?: null;
     background: linear-gradient(180deg, rgba(27,58,43,0), rgba(27,58,43,.28));
   }
   .media-card .cow-fallback{ width: 62%; position: relative; z-index: 1; opacity: .92; }
+  .media-card img{
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+  }
   .media-tag{
     position:absolute; top: 18px; left: 18px; z-index: 2;
     background: var(--forest); color:#fff;
@@ -340,8 +348,8 @@ $offre_existante = $offreStmt->fetch(PDO::FETCH_ASSOC) ?: null;
             <?php echo $statut === 'vendue' ? 'Vendue' : 'Disponible'; ?>
           </span>
           <span class="media-ref">Fiche N°<?php echo (int)$vache['id']; ?></span>
-          <?php if (!empty($vache['image'])): ?>
-            <img src="../<?php echo htmlspecialchars($vache['image']); ?>" alt="<?php echo htmlspecialchars($vache['nom']); ?>" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">
+          <?php if ($imageUrl = vacheImageUrl($vache['image'] ?? null)): ?>
+            <img src="<?php echo htmlspecialchars($imageUrl); ?>" alt="<?php echo htmlspecialchars($vache['nom']); ?>">
           <?php else: ?>
           <svg class="cow-fallback" viewBox="0 0 200 140" fill="none" xmlns="http://www.w3.org/2000/svg">
             <ellipse cx="100" cy="90" rx="70" ry="34" fill="#F2EAD8"/>

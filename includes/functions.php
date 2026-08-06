@@ -66,32 +66,63 @@ function uploadVacheImage(array $file): ?string
 
     $allowed = [
         'image/jpeg' => 'jpg',
+        'image/pjpeg' => 'jpg',
         'image/png' => 'png',
         'image/webp' => 'webp',
         'image/gif' => 'gif',
     ];
 
-    $finfo = new finfo(FILEINFO_MIME_TYPE);
-    $mime = $finfo->file($file['tmp_name']);
+    $extensionMap = [
+        'jpg' => 'jpg',
+        'jpeg' => 'jpg',
+        'png' => 'png',
+        'webp' => 'webp',
+        'gif' => 'gif',
+    ];
 
-    if (!isset($allowed[$mime])) {
+    $extension = strtolower(pathinfo($file['name'] ?? '', PATHINFO_EXTENSION));
+    $mime = null;
+
+    if (class_exists('finfo')) {
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $mime = $finfo->file($file['tmp_name']);
+    }
+
+    if ($mime !== null && isset($allowed[$mime])) {
+        $extension = $allowed[$mime];
+    } elseif (!isset($extensionMap[$extension])) {
         return null;
+    } else {
+        $extension = $extensionMap[$extension];
     }
 
     $uploadDir = __DIR__ . '/../uploads/vaches';
 
-    if (!is_dir($uploadDir) && !mkdir($uploadDir, 0755, true) && !is_dir($uploadDir)) {
+    if (!is_dir($uploadDir) && !mkdir($uploadDir, 0777, true) && !is_dir($uploadDir)) {
         return null;
     }
 
-    $filename = uniqid('vache_', true) . '.' . $allowed[$mime];
+    @chmod($uploadDir, 0777);
+
+    $filename = uniqid('vache_', true) . '.' . $extension;
     $destination = $uploadDir . '/' . $filename;
 
     if (!move_uploaded_file($file['tmp_name'], $destination)) {
         return null;
     }
 
+    @chmod($destination, 0644);
+
     return 'uploads/vaches/' . $filename;
+}
+
+function vacheImageUrl(?string $imagePath): ?string
+{
+    if ($imagePath === null || $imagePath === '') {
+        return null;
+    }
+
+    return '../' . ltrim($imagePath, '/');
 }
 
 function deleteVacheImage(?string $imagePath): void

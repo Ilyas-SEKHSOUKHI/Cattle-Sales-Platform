@@ -222,6 +222,14 @@ $vaches = $stmt->fetchAll(PDO::FETCH_ASSOC);
       linear-gradient(135deg, #cfe7c9, #a9cf9f);
   }
   .cow-photo .cow-fallback{ position:absolute; inset:0; margin:auto; width: 58%; opacity:.85; }
+  .cow-photo img{
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
 
   .cow-tag{
     position:absolute; top: 12px; left: 12px;
@@ -385,8 +393,8 @@ $vaches = $stmt->fetchAll(PDO::FETCH_ASSOC);
           ?>
           <article class="cow-card">
             <div class="cow-photo">
-              <?php if (!empty($vache['image'])): ?>
-                <img src="../<?php echo htmlspecialchars($vache['image']); ?>" alt="<?php echo htmlspecialchars($vache['nom']); ?>" style="width:100%;height:100%;object-fit:cover;">
+              <?php if ($imageUrl = vacheImageUrl($vache['image'] ?? null)): ?>
+                <img src="<?php echo htmlspecialchars($imageUrl); ?>" alt="<?php echo htmlspecialchars($vache['nom']); ?>">
               <?php else: ?>
               <svg class="cow-fallback" viewBox="0 0 200 140" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <ellipse cx="100" cy="90" rx="70" ry="34" fill="#F2EAD8"/>

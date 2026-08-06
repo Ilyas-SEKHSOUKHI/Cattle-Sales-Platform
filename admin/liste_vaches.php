@@ -391,8 +391,8 @@ $vaches = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <td data-label="Animal">
               <div class="animal-cell">
                 <div class="animal-thumb">
-                  <?php if (!empty($v['image'])): ?>
-                    <img src="../<?php echo htmlspecialchars($v['image']); ?>" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">
+                  <?php if ($imageUrl = vacheImageUrl($v['image'] ?? null)): ?>
+                    <img src="<?php echo htmlspecialchars($imageUrl); ?>" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">
                   <?php else: ?>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke-linecap="round"/><circle cx="12" cy="8" r="4"/></svg>
                   <?php endif; ?>

@@ -280,6 +280,30 @@ $adminNom = $_SESSION['nom'];
   .btn-cancel{ background: var(--cream-2); color: var(--ink-soft); border:1px solid var(--line); }
   .btn-cancel:hover{ background: #EADFC4; }
 
+  .image-preview{
+    margin-top: .5rem;
+    border: 1px dashed var(--line);
+    border-radius: 12px;
+    background: var(--cream);
+    min-height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .image-preview img{
+    width: 100%;
+    max-height: 220px;
+    object-fit: cover;
+    display: block;
+  }
+  .image-preview .placeholder{
+    font-size: .82rem;
+    color: var(--ink-soft);
+    padding: 1rem;
+    text-align: center;
+  }
+
   /* ---------- RESPONSIVE ---------- */
   @media (max-width: 980px){
     .layout{ grid-template-columns: 1fr; }
@@ -415,6 +439,9 @@ $adminNom = $_SESSION['nom'];
             <div class="form-group full">
               <label for="image">Photo de l'animal</label>
               <input type="file" id="image" name="image" accept="image/jpeg,image/png,image/webp,image/gif">
+              <div class="image-preview" id="imagePreview">
+                <span class="placeholder">Aucune photo sélectionnée</span>
+              </div>
               <span class="hint">Formats acceptés : JPG, PNG, WEBP, GIF (optionnel).</span>
             </div>
             <div class="form-group full">
@@ -437,6 +464,24 @@ $adminNom = $_SESSION['nom'];
 
   </main>
 </div>
+
+<script>
+document.getElementById('image').addEventListener('change', function () {
+  const preview = document.getElementById('imagePreview');
+  const file = this.files && this.files[0];
+
+  if (!file) {
+    preview.innerHTML = '<span class="placeholder">Aucune photo sélectionnée</span>';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function (event) {
+    preview.innerHTML = '<img src="' + event.target.result + '" alt="Aperçu de la photo">';
+  };
+  reader.readAsDataURL(file);
+});
+</script>
 
 </body>
 </html>
