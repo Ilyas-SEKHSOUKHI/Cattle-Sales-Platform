@@ -12,7 +12,7 @@ $filtres = [
     'tri' => $_GET['tri'] ?? 'recent',
 ];
 
-$sql = "SELECT id, nom, bovin, age, poids, description, image, statut FROM vaches WHERE statut = 'disponible'";
+$sql = "SELECT id, nom, bovin, date_naissance, age, poids, description, image, statut FROM vaches WHERE statut = 'disponible'";
 $params = [];
 
 if ($filtres['recherche'] !== '') {
@@ -22,10 +22,10 @@ if ($filtres['recherche'] !== '') {
 
 switch ($filtres['tri']) {
     case 'age_asc':
-        $sql .= ' ORDER BY age ASC';
+        $sql .= ' ORDER BY date_naissance IS NULL, date_naissance DESC, age ASC';
         break;
     case 'age_desc':
-        $sql .= ' ORDER BY age DESC';
+        $sql .= ' ORDER BY date_naissance IS NULL, date_naissance ASC, age DESC';
         break;
     case 'poids_desc':
         $sql .= ' ORDER BY poids DESC';
@@ -413,7 +413,7 @@ $vaches = $stmt->fetchAll(PDO::FETCH_ASSOC);
               <h3><?php echo htmlspecialchars($vache['nom']); ?></h3>
               <p class="cow-meta">
                 <?php echo htmlspecialchars(labelBovin($vache['bovin'] ?? 'vache')); ?> ·
-                <?php echo (int)$vache['age']; ?> ans ·
+                <?php echo (int) vacheAge($vache['date_naissance'] ?? null, $vache['age'] !== null ? (int) $vache['age'] : null); ?> ans ·
                 <?php echo number_format((float)$vache['poids'], 0, ',', ' '); ?> kg
               </p>
               <?php if (!empty($vache['description'])): ?>

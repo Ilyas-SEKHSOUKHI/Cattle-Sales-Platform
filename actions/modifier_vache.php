@@ -13,12 +13,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
 $nom = trim(filter_input(INPUT_POST, 'nom', FILTER_SANITIZE_SPECIAL_CHARS) ?: '');
 $bovin = $_POST['bovin'] ?? 'vache';
-$age = filter_input(INPUT_POST, 'age', FILTER_VALIDATE_INT);
+$dateNaissance = parseDateNaissance(trim($_POST['date_naissance'] ?? ''));
 $poids = filter_input(INPUT_POST, 'poids', FILTER_VALIDATE_FLOAT);
 $description = trim($_POST['description'] ?? '');
 $statut = $_POST['statut'] ?? 'disponible';
 
-if (!$id || $nom === '' || !in_array($nom, getRaces(), true)) {
+if (!$id || $nom === '' || !in_array($nom, getRaces(), true) || $dateNaissance === null) {
     redirect('../admin/liste_vaches.php');
 }
 
@@ -42,6 +42,7 @@ if (!$existing) {
     redirect('../admin/liste_vaches.php');
 }
 
+$age = calculateAgeFromBirthDate($dateNaissance);
 $image = $existing['image'];
 
 if (!empty($_FILES['image']['name'])) {
@@ -55,14 +56,15 @@ if (!empty($_FILES['image']['name'])) {
 
 $stmt = $pdo->prepare(
     'UPDATE vaches
-     SET nom = :nom, bovin = :bovin, age = :age, poids = :poids, description = :description, image = :image, statut = :statut
+     SET nom = :nom, bovin = :bovin, date_naissance = :date_naissance, age = :age, poids = :poids, description = :description, image = :image, statut = :statut
      WHERE id = :id AND id_admin = :id_admin'
 );
 
 $stmt->execute([
     ':nom' => $nom,
     ':bovin' => $bovin,
-    ':age' => $age !== false && $age !== null ? $age : null,
+    ':date_naissance' => $dateNaissance,
+    ':age' => $age,
     ':poids' => $poids !== false && $poids !== null ? $poids : null,
     ':description' => $description !== '' ? $description : null,
     ':image' => $image,

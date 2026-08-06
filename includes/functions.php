@@ -130,6 +130,54 @@ function telephoneDigits(?string $telephone): string
     return preg_replace('/\D/', '', $telephone ?? '');
 }
 
+function parseDateNaissance(string $input): ?string
+{
+    $date = DateTime::createFromFormat('Y-m-d', $input);
+
+    if (!$date || $date->format('Y-m-d') !== $input) {
+        return null;
+    }
+
+    $today = new DateTime('today');
+
+    if ($date > $today) {
+        return null;
+    }
+
+    return $input;
+}
+
+function calculateAgeFromBirthDate(?string $dateNaissance): ?int
+{
+    if ($dateNaissance === null || $dateNaissance === '') {
+        return null;
+    }
+
+    try {
+        $birth = new DateTime($dateNaissance);
+        $today = new DateTime('today');
+
+        if ($birth > $today) {
+            return null;
+        }
+
+        return (int) $birth->diff($today)->y;
+    } catch (Exception $e) {
+        return null;
+    }
+}
+
+function vacheAge(?string $dateNaissance, ?int $storedAge = null): ?int
+{
+    $calculated = calculateAgeFromBirthDate($dateNaissance);
+
+    if ($calculated !== null) {
+        return $calculated;
+    }
+
+    return $storedAge;
+}
+
 function deleteVacheImage(?string $imagePath): void
 {
     if ($imagePath === null || $imagePath === '') {

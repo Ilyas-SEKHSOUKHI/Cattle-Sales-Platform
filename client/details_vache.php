@@ -13,7 +13,7 @@ if (!$id) {
     redirect('accueil.php');
 }
 
-$stmt = $pdo->prepare('SELECT id, nom, bovin, age, poids, description, image, statut FROM vaches WHERE id = :id');
+$stmt = $pdo->prepare('SELECT id, nom, bovin, date_naissance, age, poids, description, image, statut FROM vaches WHERE id = :id');
 $stmt->execute([':id' => $id]);
 $vache = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -380,7 +380,7 @@ $offre_existante = $offreStmt->fetch(PDO::FETCH_ASSOC) ?: null;
             <span class="lbl">Bovin</span>
           </div>
           <div class="meta-item">
-            <span class="val"><?php echo (int)$vache['age']; ?> ans</span>
+            <span class="val"><?php echo (int) vacheAge($vache['date_naissance'] ?? null, $vache['age'] !== null ? (int) $vache['age'] : null); ?> ans</span>
             <span class="lbl">Âge</span>
           </div>
           <div class="meta-item">

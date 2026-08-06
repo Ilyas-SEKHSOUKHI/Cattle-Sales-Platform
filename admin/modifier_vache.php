@@ -14,7 +14,7 @@ if (!$id) {
     redirect('liste_vaches.php');
 }
 
-$stmt = $pdo->prepare('SELECT id, nom, bovin, age, poids, description, image, statut FROM vaches WHERE id = :id AND id_admin = :id_admin');
+$stmt = $pdo->prepare('SELECT id, nom, bovin, date_naissance, age, poids, description, image, statut FROM vaches WHERE id = :id AND id_admin = :id_admin');
 $stmt->execute([':id' => $id, ':id_admin' => $adminId]);
 $vache = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -229,7 +229,7 @@ if (!$vache) {
   }
   .form-group .hint{ font-size:.76rem; color: var(--ink-soft); font-weight:400; }
 
-  input[type="text"], input[type="number"], input[type="file"], select, textarea{
+  input[type="text"], input[type="number"], input[type="date"], input[type="file"], select, textarea{
     width:100%;
     padding: .75rem .9rem;
     border: 1px solid var(--line);
@@ -441,8 +441,13 @@ if (!$vache) {
               </select>
             </div>
             <div class="form-group">
-              <label for="age">Âge (années)</label>
-              <input type="number" id="age" name="age" min="0" step="1" placeholder="ex. 3" value="<?php echo $vache['age'] !== null ? (int) $vache['age'] : ''; ?>">
+              <label for="date_naissance">Date de naissance</label>
+              <input type="date" id="date_naissance" name="date_naissance" max="<?php echo date('Y-m-d'); ?>" value="<?php echo htmlspecialchars($vache['date_naissance'] ?? ''); ?>" required>
+            </div>
+            <div class="form-group">
+              <label for="age_calcule">Âge calculé</label>
+              <input type="text" id="age_calcule" readonly placeholder="—" aria-readonly="true">
+              <span class="hint">Calculé automatiquement à partir de la date de naissance.</span>
             </div>
             <div class="form-group">
               <label for="poids">Poids (kg)</label>
@@ -504,6 +509,41 @@ document.getElementById('image').addEventListener('change', function () {
   };
   reader.readAsDataURL(file);
 });
+
+function updateCalculatedAge() {
+  const input = document.getElementById('date_naissance');
+  const output = document.getElementById('age_calcule');
+  const value = input.value;
+
+  if (!value) {
+    output.value = '';
+    output.placeholder = '—';
+    return;
+  }
+
+  const birth = new Date(value + 'T00:00:00');
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (birth > today) {
+    output.value = '';
+    output.placeholder = 'Date invalide';
+    return;
+  }
+
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+
+  output.value = age + ' an' + (age > 1 ? 's' : '');
+}
+
+document.getElementById('date_naissance').addEventListener('change', updateCalculatedAge);
+document.getElementById('date_naissance').addEventListener('input', updateCalculatedAge);
+updateCalculatedAge();
 </script>
 
 </body>

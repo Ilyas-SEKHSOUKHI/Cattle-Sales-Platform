@@ -12,12 +12,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $nom = trim(filter_input(INPUT_POST, 'nom', FILTER_SANITIZE_SPECIAL_CHARS) ?: '');
 $bovin = $_POST['bovin'] ?? 'vache';
-$age = filter_input(INPUT_POST, 'age', FILTER_VALIDATE_INT);
+$dateNaissance = parseDateNaissance(trim($_POST['date_naissance'] ?? ''));
 $poids = filter_input(INPUT_POST, 'poids', FILTER_VALIDATE_FLOAT);
 $description = trim($_POST['description'] ?? '');
 $statut = $_POST['statut'] ?? 'disponible';
 
-if ($nom === '' || !in_array($nom, getRaces(), true)) {
+if ($nom === '' || !in_array($nom, getRaces(), true) || $dateNaissance === null) {
     redirect('../admin/ajouter_vache.php');
 }
 
@@ -29,17 +29,19 @@ if (!in_array($statut, ['disponible', 'vendue'], true)) {
     $statut = 'disponible';
 }
 
+$age = calculateAgeFromBirthDate($dateNaissance);
 $image = uploadVacheImage($_FILES['image'] ?? []);
 
 $stmt = $pdo->prepare(
-    'INSERT INTO vaches (nom, bovin, age, poids, description, image, statut, id_admin)
-     VALUES (:nom, :bovin, :age, :poids, :description, :image, :statut, :id_admin)'
+    'INSERT INTO vaches (nom, bovin, date_naissance, age, poids, description, image, statut, id_admin)
+     VALUES (:nom, :bovin, :date_naissance, :age, :poids, :description, :image, :statut, :id_admin)'
 );
 
 $stmt->execute([
     ':nom' => $nom,
     ':bovin' => $bovin,
-    ':age' => $age !== false && $age !== null ? $age : null,
+    ':date_naissance' => $dateNaissance,
+    ':age' => $age,
     ':poids' => $poids !== false && $poids !== null ? $poids : null,
     ':description' => $description !== '' ? $description : null,
     ':image' => $image,

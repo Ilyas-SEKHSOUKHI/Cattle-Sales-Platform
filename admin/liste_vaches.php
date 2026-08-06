@@ -8,7 +8,7 @@ requireAdmin();
 $adminNom = $_SESSION['nom'];
 $adminId = (int) $_SESSION['user_id'];
 
-$stmt = $pdo->prepare('SELECT id, nom, bovin, age, poids, image, statut FROM vaches WHERE id_admin = :id_admin ORDER BY id DESC');
+$stmt = $pdo->prepare('SELECT id, nom, bovin, date_naissance, age, poids, image, statut FROM vaches WHERE id_admin = :id_admin ORDER BY id DESC');
 $stmt->execute([':id_admin' => $adminId]);
 $vaches = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
@@ -403,7 +403,7 @@ $vaches = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
               </div>
             </td>
-            <td data-label="Âge"><?php echo (int)$v['age']; ?> ans</td>
+            <td data-label="Âge"><?php echo (int) vacheAge($v['date_naissance'] ?? null, $v['age'] !== null ? (int) $v['age'] : null); ?> ans</td>
             <td data-label="Poids"><?php echo number_format((float)$v['poids'], 0, ',', ' '); ?> kg</td>
             <td data-label="Statut">
               <span class="badge <?php echo $v['statut']; ?>">
