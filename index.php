@@ -475,9 +475,9 @@
     font-weight: 700;
     letter-spacing: .05em;
     display:block;
-    margin-bottom: .5rem;
+    margin: 1rem 0 1rem;
   }
-  .product-card p{ font-size: .88rem; color: var(--ink-soft); }
+  .product-card p{ font-size: .88rem; color: var(--ink-soft); margin-top: .25rem; }
 
   /* ---- About the farm ---- */
   .about{
@@ -801,27 +801,27 @@
 
     <div class="products-grid">
       <div class="product-card">
-        <img src="assets/images/icon_vache.png" alt="" style="border-radius: 10px;">
+        <img src="assets/images/lait_cru.jpg" alt="" style="border-radius: 10px;">
         <span class="code">CAT 01</span>
         <h4>Lait cru</h4>
         <p>Vache de race laitière sélectionnée pour sa production.</p>
       </div>
       <div class="product-card">
-        <img src="assets/images/icon_vache.png" alt="" style="border-radius: 10px;">
+        <img src="assets/images/vache_1.jpg" alt="" style="border-radius: 10px;">
         <span class="code">CAT 02</span>
         <h4>Vache</h4>
         <p>Femelle adulte élevée pour la reproduction et la production.</p>
       </div>
       <div class="product-card">
-        <img src="assets/images/icon_vache.png" alt="" style="border-radius: 10px;">
+        <img src="assets/images/veau.jpg" alt="" style="border-radius: 10px;">
         <span class="code">CAT 03</span>
-        <h4>Veau</h4>
+        <h4>Veau / Velle</h4>
         <p>Jeune bovin en croissance, prêt à rejoindre le cheptel.</p>
       </div>
       <div class="product-card">
-        <img src="assets/images/icon_vache.png" alt="" style="border-radius: 10px;">
+        <img src="assets/images/boeuf.jpg" alt="" style="border-radius: 10px;">
         <span class="code">CAT 04</span>
-        <h4>Velle / Genisse / Bœuf</h4>
+        <h4>Bœuf</h4>
         <p>Variantes du cheptel selon l’âge, le sexe et l’usage.</p>
       </div>
     </div>
