@@ -10,7 +10,7 @@ $adminId = (int) $_SESSION['user_id'];
 
 $ventesStmt = $pdo->prepare(
     'SELECT o.id, o.montant_propose AS montant, o.date_offre AS date,
-            u.nom AS acheteur, u.email, v.nom AS vache, v.id AS id_vache
+            u.nom AS acheteur, u.email, u.telephone, v.nom AS vache, v.id AS id_vache
      FROM offres o
      JOIN utilisateurs u ON o.id_utilisateur = u.id
      JOIN vaches v ON o.id_vache = v.id
@@ -252,7 +252,16 @@ $panierMoyen = $nbVentes > 0 ? $revenuTotal / $nbVentes : 0;
 
   .vache-cell .name{ font-weight:700; color: var(--forest); }
   .buyer-cell .name{ font-weight:600; }
-  .buyer-cell .email{ font-size:.78rem; color: var(--ink-soft); }
+  .buyer-cell .contact{
+    font-size:.78rem;
+    color: var(--ink-soft);
+    margin-top:.15rem;
+    display:flex;
+    flex-direction:column;
+    gap:.1rem;
+  }
+  .buyer-cell .contact a{ color: var(--green-dark); font-weight:600; }
+  .buyer-cell .contact a:hover{ text-decoration:underline; }
   .montant{ font-family: var(--display); font-weight:600; font-size: 1rem; color: var(--green-dark); }
 
   .badge{
@@ -426,7 +435,14 @@ $panierMoyen = $nbVentes > 0 ? $revenuTotal / $nbVentes : 0;
             <td data-label="Acheteur">
               <div class="buyer-cell">
                 <div class="name"><?php echo htmlspecialchars($vente['acheteur']); ?></div>
-                <div class="email"><?php echo htmlspecialchars($vente['email']); ?></div>
+                <div class="contact">
+                  <a href="mailto:<?php echo htmlspecialchars($vente['email']); ?>"><?php echo htmlspecialchars($vente['email']); ?></a>
+                  <?php if (!empty($vente['telephone'])): ?>
+                    <a href="tel:<?php echo htmlspecialchars(telephoneDigits($vente['telephone'])); ?>"><?php echo htmlspecialchars($vente['telephone']); ?></a>
+                  <?php else: ?>
+                    <span>Téléphone non renseigné</span>
+                  <?php endif; ?>
+                </div>
               </div>
             </td>
             <td data-label="Montant"><span class="montant"><?php echo number_format((float)$vente['montant'], 0, ',', ' '); ?> DH</span></td>

@@ -125,6 +125,11 @@ function vacheImageUrl(?string $imagePath): ?string
     return '../' . ltrim($imagePath, '/');
 }
 
+function telephoneDigits(?string $telephone): string
+{
+    return preg_replace('/\D/', '', $telephone ?? '');
+}
+
 function deleteVacheImage(?string $imagePath): void
 {
     if ($imagePath === null || $imagePath === '') {

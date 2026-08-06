@@ -10,7 +10,7 @@ $adminId = (int) $_SESSION['user_id'];
 
 $offresStmt = $pdo->prepare(
     'SELECT o.id, o.montant_propose AS montant, o.date_offre AS date, o.statut,
-            u.nom AS acheteur, v.nom AS vache
+            u.nom AS acheteur, u.email, u.telephone, v.nom AS vache
      FROM offres o
      JOIN utilisateurs u ON o.id_utilisateur = u.id
      JOIN vaches v ON o.id_vache = v.id
@@ -233,6 +233,17 @@ $offres = $offresStmt->fetchAll(PDO::FETCH_ASSOC);
 
   .vache-cell .name{ font-weight:700; color: var(--forest); }
   .vache-cell .sub{ font-size:.78rem; color: var(--ink-soft); }
+  .buyer-cell .name{ font-weight:600; color: var(--forest); }
+  .buyer-cell .contact{
+    font-size:.78rem;
+    color: var(--ink-soft);
+    margin-top:.15rem;
+    display:flex;
+    flex-direction:column;
+    gap:.1rem;
+  }
+  .buyer-cell .contact a{ color: var(--green-dark); font-weight:600; }
+  .buyer-cell .contact a:hover{ text-decoration:underline; }
   .montant{ font-family: var(--display); font-weight:600; font-size: 1rem; color: var(--ink); }
 
   .badge{
@@ -401,7 +412,19 @@ $offres = $offresStmt->fetchAll(PDO::FETCH_ASSOC);
                 <div class="name"><?php echo htmlspecialchars($offre['vache']); ?></div>
               </div>
             </td>
-            <td data-label="Acheteur"><?php echo htmlspecialchars($offre['acheteur']); ?></td>
+            <td data-label="Acheteur">
+              <div class="buyer-cell">
+                <div class="name"><?php echo htmlspecialchars($offre['acheteur']); ?></div>
+                <div class="contact">
+                  <a href="mailto:<?php echo htmlspecialchars($offre['email']); ?>"><?php echo htmlspecialchars($offre['email']); ?></a>
+                  <?php if (!empty($offre['telephone'])): ?>
+                    <a href="tel:<?php echo htmlspecialchars(telephoneDigits($offre['telephone'])); ?>"><?php echo htmlspecialchars($offre['telephone']); ?></a>
+                  <?php else: ?>
+                    <span>Téléphone non renseigné</span>
+                  <?php endif; ?>
+                </div>
+              </div>
+            </td>
             <td data-label="Montant"><span class="montant"><?php echo number_format((float)$offre['montant'], 0, ',', ' '); ?> DH</span></td>
             <td data-label="Date"><?php echo date('d/m/Y H:i', strtotime($offre['date'])); ?></td>
             <td data-label="Statut">
