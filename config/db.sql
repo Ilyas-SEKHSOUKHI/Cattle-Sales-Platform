@@ -5,9 +5,13 @@ CREATE TABLE IF NOT EXISTS utilisateurs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nom VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
+    telephone VARCHAR(20) NOT NULL,
     mot_de_passe VARCHAR(255) NOT NULL,
     role ENUM('acheteur','admin') DEFAULT 'acheteur'
 );
+
+-- Migration pour bases existantes :
+-- ALTER TABLE utilisateurs ADD COLUMN telephone VARCHAR(20) NOT NULL DEFAULT '' AFTER email;
 
 CREATE TABLE IF NOT EXISTS vaches (
     id INT AUTO_INCREMENT PRIMARY KEY,

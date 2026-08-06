@@ -194,6 +194,10 @@
             <input type="email" name="email" id="inputEmailRegister" required>
         </div>
         <div class="field">
+            <label for="inputTelephoneRegister">Numéro de téléphone</label>
+            <input type="tel" name="telephone" id="inputTelephoneRegister" placeholder="ex. 06 12 34 56 78" required>
+        </div>
+        <div class="field">
             <label for="inputPasswordRegister">Mot de passe</label>
             <input type="password" name="mot_de_passe" id="inputPasswordRegister" required>
         </div>
