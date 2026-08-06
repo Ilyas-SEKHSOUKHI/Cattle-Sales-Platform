@@ -6,6 +6,7 @@ require_once __DIR__ . '/../config/database.php';
 requireAcheteur('../login.php', '../admin/dashboard.php');
 
 $nom_utilisateur = $_SESSION['nom'];
+$userId = (int) $_SESSION['user_id'];
 
 $stmt = $pdo->prepare(
     'SELECT o.id, o.montant_propose, o.date_offre, o.statut, v.id AS id_vache, v.nom AS vache
@@ -14,8 +15,19 @@ $stmt = $pdo->prepare(
      WHERE o.id_utilisateur = :id_utilisateur
      ORDER BY o.date_offre DESC'
 );
-$stmt->execute([':id_utilisateur' => (int) $_SESSION['user_id']]);
-$mes_offres = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$stmt->execute([':id_utilisateur' => $userId]);
+$toutesLesOffres = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$filtre = $_GET['filtre'] ?? 'tous';
+$statutsOffres = ['en_attente', 'acceptee', 'refusee'];
+
+if (!in_array($filtre, array_merge(['tous'], $statutsOffres), true)) {
+    $filtre = 'tous';
+}
+
+$mes_offres = $filtre === 'tous'
+    ? $toutesLesOffres
+    : array_values(array_filter($toutesLesOffres, fn($o) => $o['statut'] === $filtre));
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -277,13 +289,13 @@ $mes_offres = $stmt->fetchAll(PDO::FETCH_ASSOC);
   <div class="container">
 
     <?php
-      $nbAttente  = count(array_filter($mes_offres, fn($o) => $o['statut'] === 'en_attente'));
-      $nbAcceptee = count(array_filter($mes_offres, fn($o) => $o['statut'] === 'acceptee'));
-      $nbRefusee  = count(array_filter($mes_offres, fn($o) => $o['statut'] === 'refusee'));
+      $nbAttente  = count(array_filter($toutesLesOffres, fn($o) => $o['statut'] === 'en_attente'));
+      $nbAcceptee = count(array_filter($toutesLesOffres, fn($o) => $o['statut'] === 'acceptee'));
+      $nbRefusee  = count(array_filter($toutesLesOffres, fn($o) => $o['statut'] === 'refusee'));
     ?>
     <div class="stat-strip">
       <div class="stat-pill">
-        <div class="num"><?php echo count($mes_offres); ?></div>
+        <div class="num"><?php echo count($toutesLesOffres); ?></div>
         <div class="lbl">Offres envoyées</div>
       </div>
       <div class="stat-pill">
@@ -304,13 +316,13 @@ $mes_offres = $stmt->fetchAll(PDO::FETCH_ASSOC);
       <div class="panel-head">
         <div>
           <h2>Historique des offres</h2>
-          <p><?php echo count($mes_offres); ?> offre(s) au total</p>
+          <p><?php echo count($mes_offres); ?> offre(s) affichée(s)</p>
         </div>
         <div class="filters">
-          <a href="?filtre=tous" class="filter-chip active">Toutes</a>
-          <a href="?filtre=en_attente" class="filter-chip">En attente</a>
-          <a href="?filtre=acceptee" class="filter-chip">Acceptées</a>
-          <a href="?filtre=refusee" class="filter-chip">Refusées</a>
+          <a href="?filtre=tous" class="filter-chip <?php echo $filtre === 'tous' ? 'active' : ''; ?>">Toutes</a>
+          <a href="?filtre=en_attente" class="filter-chip <?php echo $filtre === 'en_attente' ? 'active' : ''; ?>">En attente</a>
+          <a href="?filtre=acceptee" class="filter-chip <?php echo $filtre === 'acceptee' ? 'active' : ''; ?>">Acceptées</a>
+          <a href="?filtre=refusee" class="filter-chip <?php echo $filtre === 'refusee' ? 'active' : ''; ?>">Refusées</a>
         </div>
       </div>
 
@@ -353,6 +365,12 @@ $mes_offres = $stmt->fetchAll(PDO::FETCH_ASSOC);
           <?php endforeach; ?>
         </tbody>
       </table>
+      <?php elseif (!empty($toutesLesOffres)): ?>
+        <div class="empty-state" style="margin: 1.5rem; border-radius: 12px;">
+          <h3>Aucune offre pour ce filtre</h3>
+          <p>Essayez un autre filtre ou consultez toutes vos offres.</p>
+          <a href="?filtre=tous" class="btn-cta">Voir toutes les offres</a>
+        </div>
       <?php else: ?>
         <div class="empty-state">
           <svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
