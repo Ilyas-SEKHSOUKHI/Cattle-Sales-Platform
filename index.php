@@ -158,7 +158,7 @@
 
   /* ================= HERO ================= */
   .hero{
-    padding: 5.5rem 0 4rem;
+    padding: 2rem 0 4rem;
     position: relative;
     overflow: hidden;
   }
@@ -668,7 +668,7 @@
   </div>
 </header>
 <!--Banner Ferme Tarmast-->
-<img src="assets/images/banner-ferme-tarmast.jpeg" alt="Banner Ferme Tarmast" width=100%>
+<img src="assets/images/banner-ferme-tarmast.jpeg" alt="Banner Ferme Tarmast" style="display:block; width:100%; height:auto; margin:0 0 0.5rem;">
 <!-- ================= HERO ================= -->
 <section class="hero">
   <div class="container">
