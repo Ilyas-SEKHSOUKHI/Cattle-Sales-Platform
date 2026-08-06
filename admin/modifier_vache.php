@@ -14,7 +14,7 @@ if (!$id) {
     redirect('liste_vaches.php');
 }
 
-$stmt = $pdo->prepare('SELECT id, nom, age, poids, description, statut FROM vaches WHERE id = :id AND id_admin = :id_admin');
+$stmt = $pdo->prepare('SELECT id, nom, bovin, age, poids, description, image, statut FROM vaches WHERE id = :id AND id_admin = :id_admin');
 $stmt->execute([':id' => $id, ':id_admin' => $adminId]);
 $vache = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -229,7 +229,7 @@ if (!$vache) {
   }
   .form-group .hint{ font-size:.76rem; color: var(--ink-soft); font-weight:400; }
 
-  input[type="text"], input[type="number"], select, textarea{
+  input[type="text"], input[type="number"], input[type="file"], select, textarea{
     width:100%;
     padding: .75rem .9rem;
     border: 1px solid var(--line);
@@ -242,7 +242,7 @@ if (!$vache) {
     transition: border-color .18s, box-shadow .18s, background .18s;
   }
   textarea{ resize:vertical; min-height: 110px; }
-  input:focus, select:focus, textarea:focus{
+  input:focus, select:focus, textarea:focus, input[type="file"]:focus{
     border-color: var(--green);
     background:#fff;
     box-shadow: 0 0 0 3px rgba(76,175,80,.15);
@@ -386,7 +386,7 @@ if (!$vache) {
       <span>Modifiez les champs ci-dessous puis enregistrez pour mettre à jour la fiche publique.</span>
     </div>
 
-    <form action="../actions/modifier_vache.php" method="POST">
+    <form action="../actions/modifier_vache.php" method="POST" enctype="multipart/form-data">
       <input type="hidden" name="id" value="<?php echo (int) $vache['id']; ?>">
       <div class="panel">
         <div class="panel-head">
@@ -396,8 +396,25 @@ if (!$vache) {
         <div class="panel-body">
           <div class="form-grid">
             <div class="form-group">
-              <label for="nom">Nom / race</label>
-              <input type="text" id="nom" name="nom" placeholder="ex. Vache Sardi" value="<?php echo htmlspecialchars($vache['nom']); ?>" required>
+              <label for="nom">Race</label>
+              <select id="nom" name="nom" required>
+                <option value="">— Choisir une race —</option>
+                <?php foreach (getRaces() as $race): ?>
+                  <option value="<?php echo htmlspecialchars($race); ?>" <?php echo $vache['nom'] === $race ? 'selected' : ''; ?>>
+                    <?php echo htmlspecialchars($race); ?>
+                  </option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="bovin">Bovin</label>
+              <select id="bovin" name="bovin" required>
+                <?php foreach (getBovins() as $value => $label): ?>
+                  <option value="<?php echo htmlspecialchars($value); ?>" <?php echo ($vache['bovin'] ?? 'vache') === $value ? 'selected' : ''; ?>>
+                    <?php echo htmlspecialchars($label); ?>
+                  </option>
+                <?php endforeach; ?>
+              </select>
             </div>
             <div class="form-group">
               <label for="age">Âge (années)</label>
@@ -413,6 +430,15 @@ if (!$vache) {
                 <option value="disponible" <?php echo $vache['statut'] === 'disponible' ? 'selected' : ''; ?>>Disponible</option>
                 <option value="vendue" <?php echo $vache['statut'] === 'vendue' ? 'selected' : ''; ?>>Vendue</option>
               </select>
+            </div>
+            <div class="form-group full">
+              <label for="image">Photo de l'animal</label>
+              <?php if (!empty($vache['image'])): ?>
+                <img src="../<?php echo htmlspecialchars($vache['image']); ?>" alt="Photo actuelle" style="max-width:200px;border-radius:10px;border:1px solid var(--line);margin-bottom:.5rem;">
+                <span class="hint">Photo actuelle — choisissez un fichier pour la remplacer.</span>
+              <?php endif; ?>
+              <input type="file" id="image" name="image" accept="image/jpeg,image/png,image/webp,image/gif">
+              <span class="hint">Formats acceptés : JPG, PNG, WEBP, GIF (optionnel).</span>
             </div>
             <div class="form-group full">
               <label for="description">Description</label>

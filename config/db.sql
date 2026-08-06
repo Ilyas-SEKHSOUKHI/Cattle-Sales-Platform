@@ -12,13 +12,19 @@ CREATE TABLE IF NOT EXISTS utilisateurs (
 CREATE TABLE IF NOT EXISTS vaches (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nom VARCHAR(100) NOT NULL,
+    bovin ENUM('vache','veau','velle','genisse','boeuf') DEFAULT 'vache',
     age INT,
     poids DECIMAL(6,2),
     description TEXT,
+    image VARCHAR(255),
     statut ENUM('disponible','vendue') DEFAULT 'disponible',
     id_admin INT NOT NULL,
     FOREIGN KEY (id_admin) REFERENCES utilisateurs(id)
 );
+
+-- Migration pour bases existantes :
+-- ALTER TABLE vaches ADD COLUMN bovin ENUM('vache','veau','velle','genisse','boeuf') DEFAULT 'vache' AFTER nom;
+-- ALTER TABLE vaches ADD COLUMN image VARCHAR(255) NULL AFTER description;
 
 CREATE TABLE IF NOT EXISTS offres (
     id INT AUTO_INCREMENT PRIMARY KEY,

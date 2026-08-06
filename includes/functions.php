@@ -30,3 +30,79 @@ function requireAcheteur(string $loginPath = '../login.php', string $fallback = 
         redirect($fallback);
     }
 }
+
+function getRaces(): array
+{
+    return ['Holstein', 'Charolaise', 'Montbeliade'];
+}
+
+function getBovins(): array
+{
+    return [
+        'vache' => 'Vache',
+        'veau' => 'Veau',
+        'velle' => 'Velle',
+        'genisse' => 'Génisse',
+        'boeuf' => 'Boeuf',
+    ];
+}
+
+function labelBovin(?string $bovin): string
+{
+    $labels = getBovins();
+
+    return $labels[$bovin] ?? 'Vache';
+}
+
+function uploadVacheImage(array $file): ?string
+{
+    if (($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+        return null;
+    }
+
+    if (($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+        return null;
+    }
+
+    $allowed = [
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
+        'image/webp' => 'webp',
+        'image/gif' => 'gif',
+    ];
+
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mime = $finfo->file($file['tmp_name']);
+
+    if (!isset($allowed[$mime])) {
+        return null;
+    }
+
+    $uploadDir = __DIR__ . '/../uploads/vaches';
+
+    if (!is_dir($uploadDir) && !mkdir($uploadDir, 0755, true) && !is_dir($uploadDir)) {
+        return null;
+    }
+
+    $filename = uniqid('vache_', true) . '.' . $allowed[$mime];
+    $destination = $uploadDir . '/' . $filename;
+
+    if (!move_uploaded_file($file['tmp_name'], $destination)) {
+        return null;
+    }
+
+    return 'uploads/vaches/' . $filename;
+}
+
+function deleteVacheImage(?string $imagePath): void
+{
+    if ($imagePath === null || $imagePath === '') {
+        return;
+    }
+
+    $fullPath = __DIR__ . '/../' . ltrim($imagePath, '/');
+
+    if (is_file($fullPath)) {
+        unlink($fullPath);
+    }
+}

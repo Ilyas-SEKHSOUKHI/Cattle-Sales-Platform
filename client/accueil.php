@@ -12,7 +12,7 @@ $filtres = [
     'tri' => $_GET['tri'] ?? 'recent',
 ];
 
-$sql = "SELECT id, nom, age, poids, description, statut FROM vaches WHERE statut = 'disponible'";
+$sql = "SELECT id, nom, bovin, age, poids, description, image, statut FROM vaches WHERE statut = 'disponible'";
 $params = [];
 
 if ($filtres['recherche'] !== '') {
@@ -385,6 +385,9 @@ $vaches = $stmt->fetchAll(PDO::FETCH_ASSOC);
           ?>
           <article class="cow-card">
             <div class="cow-photo">
+              <?php if (!empty($vache['image'])): ?>
+                <img src="../<?php echo htmlspecialchars($vache['image']); ?>" alt="<?php echo htmlspecialchars($vache['nom']); ?>" style="width:100%;height:100%;object-fit:cover;">
+              <?php else: ?>
               <svg class="cow-fallback" viewBox="0 0 200 140" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <ellipse cx="100" cy="90" rx="70" ry="34" fill="#F2EAD8"/>
                 <ellipse cx="60" cy="70" rx="16" ry="20" fill="#F2EAD8"/>
@@ -394,12 +397,14 @@ $vaches = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <ellipse cx="90" cy="95" rx="10" ry="12" fill="#1B3A2B" opacity=".55"/>
                 <path d="M40 118l0 14M70 122l0 14M110 122l0 14M140 118l0 14" stroke="#1B3A2B" stroke-width="6" stroke-linecap="round"/>
               </svg>
+              <?php endif; ?>
               <span class="cow-tag statut-<?php echo htmlspecialchars($statut); ?>"><?php echo $labelStatut; ?></span>
             </div>
 
             <div class="cow-body">
               <h3><?php echo htmlspecialchars($vache['nom']); ?></h3>
               <p class="cow-meta">
+                <?php echo htmlspecialchars(labelBovin($vache['bovin'] ?? 'vache')); ?> ·
                 <?php echo (int)$vache['age']; ?> ans ·
                 <?php echo number_format((float)$vache['poids'], 0, ',', ' '); ?> kg
               </p>

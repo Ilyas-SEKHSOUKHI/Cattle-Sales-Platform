@@ -8,7 +8,7 @@ requireAdmin();
 $adminNom = $_SESSION['nom'];
 $adminId = (int) $_SESSION['user_id'];
 
-$stmt = $pdo->prepare('SELECT id, nom, age, poids, statut FROM vaches WHERE id_admin = :id_admin ORDER BY id DESC');
+$stmt = $pdo->prepare('SELECT id, nom, bovin, age, poids, image, statut FROM vaches WHERE id_admin = :id_admin ORDER BY id DESC');
 $stmt->execute([':id_admin' => $adminId]);
 $vaches = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
@@ -391,11 +391,15 @@ $vaches = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <td data-label="Animal">
               <div class="animal-cell">
                 <div class="animal-thumb">
+                  <?php if (!empty($v['image'])): ?>
+                    <img src="../<?php echo htmlspecialchars($v['image']); ?>" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">
+                  <?php else: ?>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke-linecap="round"/><circle cx="12" cy="8" r="4"/></svg>
+                  <?php endif; ?>
                 </div>
                 <div>
                   <div class="animal-name"><?php echo htmlspecialchars($v['nom']); ?></div>
-                  <div class="animal-sub">Fiche N°<?php echo (int)$v['id']; ?></div>
+                  <div class="animal-sub"><?php echo htmlspecialchars(labelBovin($v['bovin'] ?? 'vache')); ?> · Fiche N°<?php echo (int)$v['id']; ?></div>
                 </div>
               </div>
             </td>

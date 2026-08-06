@@ -213,7 +213,7 @@ $adminNom = $_SESSION['nom'];
   }
   .form-group .hint{ font-size:.76rem; color: var(--ink-soft); font-weight:400; }
 
-  input[type="text"], input[type="number"], select, textarea{
+  input[type="text"], input[type="number"], input[type="file"], select, textarea{
     width:100%;
     padding: .75rem .9rem;
     border: 1px solid var(--line);
@@ -226,7 +226,7 @@ $adminNom = $_SESSION['nom'];
     transition: border-color .18s, box-shadow .18s, background .18s;
   }
   textarea{ resize:vertical; min-height: 110px; }
-  input:focus, select:focus, textarea:focus{
+  input:focus, select:focus, textarea:focus, input[type="file"]:focus{
     border-color: var(--green);
     background:#fff;
     box-shadow: 0 0 0 3px rgba(76,175,80,.15);
@@ -370,7 +370,7 @@ $adminNom = $_SESSION['nom'];
       <span>Une fois enregistrée, la fiche est visible par les acheteurs avec le statut « disponible ».</span>
     </div>
 
-    <form action="../actions/ajouter_vache.php" method="POST">
+    <form action="../actions/ajouter_vache.php" method="POST" enctype="multipart/form-data">
       <div class="panel">
         <div class="panel-head">
           <h2>Informations de l'animal</h2>
@@ -379,8 +379,23 @@ $adminNom = $_SESSION['nom'];
         <div class="panel-body">
           <div class="form-grid">
             <div class="form-group">
-              <label for="nom">Nom / race</label>
-              <input type="text" id="nom" name="nom" placeholder="ex. Vache Sardi" required>
+              <label for="nom">Race</label>
+              <select id="nom" name="nom" required>
+                <option value="">— Choisir une race —</option>
+                <?php foreach (getRaces() as $race): ?>
+                  <option value="<?php echo htmlspecialchars($race); ?>"><?php echo htmlspecialchars($race); ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="bovin">Bovin</label>
+              <select id="bovin" name="bovin" required>
+                <?php foreach (getBovins() as $value => $label): ?>
+                  <option value="<?php echo htmlspecialchars($value); ?>" <?php echo $value === 'vache' ? 'selected' : ''; ?>>
+                    <?php echo htmlspecialchars($label); ?>
+                  </option>
+                <?php endforeach; ?>
+              </select>
             </div>
             <div class="form-group">
               <label for="age">Âge (années)</label>
@@ -396,6 +411,11 @@ $adminNom = $_SESSION['nom'];
                 <option value="disponible" selected>Disponible</option>
                 <option value="vendue">Vendue</option>
               </select>
+            </div>
+            <div class="form-group full">
+              <label for="image">Photo de l'animal</label>
+              <input type="file" id="image" name="image" accept="image/jpeg,image/png,image/webp,image/gif">
+              <span class="hint">Formats acceptés : JPG, PNG, WEBP, GIF (optionnel).</span>
             </div>
             <div class="form-group full">
               <label for="description">Description</label>

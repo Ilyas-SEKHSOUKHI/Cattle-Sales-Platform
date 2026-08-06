@@ -12,40 +12,60 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
 $nom = trim(filter_input(INPUT_POST, 'nom', FILTER_SANITIZE_SPECIAL_CHARS) ?: '');
+$bovin = $_POST['bovin'] ?? 'vache';
 $age = filter_input(INPUT_POST, 'age', FILTER_VALIDATE_INT);
 $poids = filter_input(INPUT_POST, 'poids', FILTER_VALIDATE_FLOAT);
 $description = trim($_POST['description'] ?? '');
 $statut = $_POST['statut'] ?? 'disponible';
 
-if (!$id || $nom === '') {
+if (!$id || $nom === '' || !in_array($nom, getRaces(), true)) {
     redirect('../admin/liste_vaches.php');
+}
+
+if (!array_key_exists($bovin, getBovins())) {
+    $bovin = 'vache';
 }
 
 if (!in_array($statut, ['disponible', 'vendue'], true)) {
     $statut = 'disponible';
 }
 
-$check = $pdo->prepare('SELECT id FROM vaches WHERE id = :id AND id_admin = :id_admin');
+$check = $pdo->prepare('SELECT id, image FROM vaches WHERE id = :id AND id_admin = :id_admin');
 $check->execute([
     ':id' => $id,
     ':id_admin' => (int) $_SESSION['user_id'],
 ]);
 
-if (!$check->fetch()) {
+$existing = $check->fetch(PDO::FETCH_ASSOC);
+
+if (!$existing) {
     redirect('../admin/liste_vaches.php');
+}
+
+$image = $existing['image'];
+
+if (!empty($_FILES['image']['name'])) {
+    $newImage = uploadVacheImage($_FILES['image']);
+
+    if ($newImage !== null) {
+        deleteVacheImage($image);
+        $image = $newImage;
+    }
 }
 
 $stmt = $pdo->prepare(
     'UPDATE vaches
-     SET nom = :nom, age = :age, poids = :poids, description = :description, statut = :statut
+     SET nom = :nom, bovin = :bovin, age = :age, poids = :poids, description = :description, image = :image, statut = :statut
      WHERE id = :id AND id_admin = :id_admin'
 );
 
 $stmt->execute([
     ':nom' => $nom,
+    ':bovin' => $bovin,
     ':age' => $age !== false && $age !== null ? $age : null,
     ':poids' => $poids !== false && $poids !== null ? $poids : null,
     ':description' => $description !== '' ? $description : null,
+    ':image' => $image,
     ':statut' => $statut,
     ':id' => $id,
     ':id_admin' => (int) $_SESSION['user_id'],

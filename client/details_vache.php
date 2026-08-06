@@ -13,7 +13,7 @@ if (!$id) {
     redirect('accueil.php');
 }
 
-$stmt = $pdo->prepare('SELECT id, nom, age, poids, description, statut FROM vaches WHERE id = :id');
+$stmt = $pdo->prepare('SELECT id, nom, bovin, age, poids, description, image, statut FROM vaches WHERE id = :id');
 $stmt->execute([':id' => $id]);
 $vache = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -340,6 +340,9 @@ $offre_existante = $offreStmt->fetch(PDO::FETCH_ASSOC) ?: null;
             <?php echo $statut === 'vendue' ? 'Vendue' : 'Disponible'; ?>
           </span>
           <span class="media-ref">Fiche N°<?php echo (int)$vache['id']; ?></span>
+          <?php if (!empty($vache['image'])): ?>
+            <img src="../<?php echo htmlspecialchars($vache['image']); ?>" alt="<?php echo htmlspecialchars($vache['nom']); ?>" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">
+          <?php else: ?>
           <svg class="cow-fallback" viewBox="0 0 200 140" fill="none" xmlns="http://www.w3.org/2000/svg">
             <ellipse cx="100" cy="90" rx="70" ry="34" fill="#F2EAD8"/>
             <ellipse cx="60" cy="70" rx="16" ry="20" fill="#F2EAD8"/>
@@ -349,6 +352,7 @@ $offre_existante = $offreStmt->fetch(PDO::FETCH_ASSOC) ?: null;
             <ellipse cx="90" cy="95" rx="10" ry="12" fill="#1B3A2B" opacity=".55"/>
             <path d="M40 118l0 14M70 122l0 14M110 122l0 14M140 118l0 14" stroke="#1B3A2B" stroke-width="6" stroke-linecap="round"/>
           </svg>
+          <?php endif; ?>
         </div>
 
         <a href="accueil.php" class="back-link">
@@ -363,6 +367,10 @@ $offre_existante = $offreStmt->fetch(PDO::FETCH_ASSOC) ?: null;
         <h1 class="vache-nom"><?php echo htmlspecialchars($vache['nom']); ?></h1>
 
         <div class="meta-row">
+          <div class="meta-item">
+            <span class="val"><?php echo htmlspecialchars(labelBovin($vache['bovin'] ?? 'vache')); ?></span>
+            <span class="lbl">Bovin</span>
+          </div>
           <div class="meta-item">
             <span class="val"><?php echo (int)$vache['age']; ?> ans</span>
             <span class="lbl">Âge</span>
