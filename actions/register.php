@@ -51,7 +51,8 @@ if (isset($_POST['register'])) {
             ':email' => $email,
             ':mot_de_passe' => $hash,
         ]);
-        echo "Utilisateur ajouté avec succès";
+        header('Location: ../login.php');
+        exit;
     } catch (PDOException $e) {
         echo "Erreur lors de l'inscription : " . $e->getMessage();
     }

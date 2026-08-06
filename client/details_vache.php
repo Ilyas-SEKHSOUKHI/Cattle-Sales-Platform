@@ -1,45 +1,38 @@
 <?php
-/**
- * client/details_vache.php
- * -------------------------------------------------
- * Fiche détaillée d'une vache + formulaire de proposition de prix.
- * La logique (session, requête $vache selon $_GET['id'], vérif offre existante) est à ta charge.
- *
- * Basé sur ton schéma réel (table `vaches` + `offres`) :
- *
- *   $vache = [
- *      'id'          => 1,
- *      'nom'         => 'Zahra',
- *      'age'         => 4,
- *      'poids'       => 620.00,
- *      'description' => 'Vache Holstein en excellente santé, bonne productrice.',
- *      'statut'      => 'disponible', // 'disponible' | 'vendue'
- *   ];
- *
- *   $nom_utilisateur = 'Ahmed';
- *
- *   // Optionnel : si l'acheteur connecté a déjà une offre en cours sur cette vache
- *   $offre_existante = [
- *      'montant_propose' => 13500.00,
- *      'statut'          => 'en_attente', // 'en_attente' | 'acceptee' | 'refusee'
- *      'date_offre'      => '2026-08-05 10:12',
- *   ]; // ou null si aucune offre
- *
- * Inclusions attendues (adapte les chemins selon ta structure) :
- *   require_once __DIR__ . '/../includes/session.php';
- *   ... récupération de $vache via SELECT * FROM vaches WHERE id = $_GET['id'] ...
- * -------------------------------------------------
- */
+require_once __DIR__ . '/../includes/session.php';
+require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../config/database.php';
 
-// Garde-fou minimal pour que le template reste affichable en démo
-if (!isset($vache)) {
-    $vache = [
-        'id' => 1, 'nom' => 'Zahra', 'age' => 4, 'poids' => 620.00,
-        'description' => 'Vache Holstein en excellente santé, bonne productrice, élevée à la ferme avec une alimentation contrôlée.',
-        'statut' => 'disponible',
-    ];
+requireAcheteur('../login.php', '../admin/dashboard.php');
+
+$nom_utilisateur = $_SESSION['nom'];
+
+$id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+
+if (!$id) {
+    redirect('accueil.php');
 }
-$offre_existante = $offre_existante ?? null;
+
+$stmt = $pdo->prepare('SELECT id, nom, age, poids, description, statut FROM vaches WHERE id = :id');
+$stmt->execute([':id' => $id]);
+$vache = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$vache) {
+    redirect('accueil.php');
+}
+
+$offreStmt = $pdo->prepare(
+    'SELECT montant_propose, statut, date_offre
+     FROM offres
+     WHERE id_utilisateur = :id_utilisateur AND id_vache = :id_vache
+     ORDER BY date_offre DESC
+     LIMIT 1'
+);
+$offreStmt->execute([
+    ':id_utilisateur' => (int) $_SESSION['user_id'],
+    ':id_vache' => $id,
+]);
+$offre_existante = $offreStmt->fetch(PDO::FETCH_ASSOC) ?: null;
 ?>
 <!DOCTYPE html>
 <html lang="fr">

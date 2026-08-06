@@ -1,23 +1,28 @@
 <?php
-    // Historique des ventes
-    // TODO (toi) : session_start(), vérifier role = 'admin',
-    // puis remplacer $ventes par :
-    // SELECT o.id, o.montant_propose, o.date_offre, u.nom AS acheteur, u.email, v.nom AS vache, v.id AS id_vache
-    // FROM offres o
-    // JOIN utilisateurs u ON o.id_utilisateur = u.id
-    // JOIN vaches v ON o.id_vache = v.id
-    // WHERE o.statut = 'acceptee' AND v.id_admin = ?
-    // ORDER BY o.date_offre DESC
+require_once __DIR__ . '/../includes/session.php';
+require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../config/database.php';
 
-    $adminNom = "Admin"; // $_SESSION['nom']
+requireAdmin();
 
-    $ventes = [
-        // ['id' => 1, 'vache' => 'Vache Sardi', 'acheteur' => 'Karim B.', 'email' => 'karim@mail.com', 'montant' => 13800, 'date' => '2026-08-04 10:12'],
-    ];
+$adminNom = $_SESSION['nom'];
+$adminId = (int) $_SESSION['user_id'];
 
-    $revenuTotal = array_sum(array_column($ventes, 'montant'));
-    $nbVentes    = count($ventes);
-    $panierMoyen = $nbVentes > 0 ? $revenuTotal / $nbVentes : 0;
+$ventesStmt = $pdo->prepare(
+    'SELECT o.id, o.montant_propose AS montant, o.date_offre AS date,
+            u.nom AS acheteur, u.email, v.nom AS vache, v.id AS id_vache
+     FROM offres o
+     JOIN utilisateurs u ON o.id_utilisateur = u.id
+     JOIN vaches v ON o.id_vache = v.id
+     WHERE o.statut = \'acceptee\' AND v.id_admin = :id_admin
+     ORDER BY o.date_offre DESC'
+);
+$ventesStmt->execute([':id_admin' => $adminId]);
+$ventes = $ventesStmt->fetchAll(PDO::FETCH_ASSOC);
+
+$revenuTotal = array_sum(array_column($ventes, 'montant'));
+$nbVentes = count($ventes);
+$panierMoyen = $nbVentes > 0 ? $revenuTotal / $nbVentes : 0;
 ?>
 <!DOCTYPE html>
 <html lang="fr">

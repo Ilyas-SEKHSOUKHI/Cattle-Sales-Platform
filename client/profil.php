@@ -1,43 +1,89 @@
 <?php
-/**
- * client/profil.php
- * -------------------------------------------------
- * Page de profil de l'acheteur connecté.
- * La logique (session, requête utilisateur, traitement du formulaire) est à ta charge.
- *
- * Variables attendues par ce template :
- *
- *   $utilisateur = [
- *      'id'          => 4,
- *      'nom'         => 'Ahmed Benali',
- *      'email'       => 'ahmed.benali@example.com',
- *      'role'        => 'acheteur',   // 'acheteur' | 'admin'
- *      'date_inscription' => '2026-03-14 09:20',
- *   ];
- *
- *   $nom_utilisateur = $utilisateur['nom'];
- *
- *   // Stats optionnelles (mêmes données que mes_offres.php si tu veux les réutiliser ici)
- *   $nb_offres_total    = 7;
- *   $nb_offres_acceptee = 2;
- *
- *   // Messages de retour de formulaire (facultatif)
- *   $message_succes = null; // ex: 'Profil mis à jour avec succès.'
- *   $message_erreur = null; // ex: 'L'ancien mot de passe est incorrect.'
- * -------------------------------------------------
- */
-$utilisateur = $utilisateur ?? [
-    'id' => null,
-    'nom' => '',
-    'email' => '',
-    'role' => 'acheteur',
-    'date_inscription' => null,
-];
-$nom_utilisateur = $nom_utilisateur ?? ($utilisateur['nom'] ?? '');
-$nb_offres_total = $nb_offres_total ?? 0;
-$nb_offres_acceptee = $nb_offres_acceptee ?? 0;
-$message_succes = $message_succes ?? null;
-$message_erreur = $message_erreur ?? null;
+require_once __DIR__ . '/../includes/session.php';
+require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../config/database.php';
+
+requireLogin('../login.php');
+
+$userId = (int) $_SESSION['user_id'];
+$message_succes = null;
+$message_erreur = null;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['modifier_infos'])) {
+        $nom = trim(filter_input(INPUT_POST, 'nom', FILTER_SANITIZE_SPECIAL_CHARS) ?: '');
+        $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
+
+        if ($nom === '' || !$email) {
+            $message_erreur = 'Veuillez renseigner un nom et un email valides.';
+        } else {
+            $check = $pdo->prepare('SELECT id FROM utilisateurs WHERE email = :email AND id != :id');
+            $check->execute([':email' => $email, ':id' => $userId]);
+
+            if ($check->fetch()) {
+                $message_erreur = 'Cet email est déjà utilisé par un autre compte.';
+            } else {
+                $pdo->prepare('UPDATE utilisateurs SET nom = :nom, email = :email WHERE id = :id')
+                    ->execute([':nom' => $nom, ':email' => $email, ':id' => $userId]);
+                $_SESSION['nom'] = $nom;
+                $message_succes = 'Profil mis à jour avec succès.';
+            }
+        }
+    } elseif (isset($_POST['modifier_mot_de_passe'])) {
+        $actuel = $_POST['mot_de_passe_actuel'] ?? '';
+        $nouveau = $_POST['nouveau_mot_de_passe'] ?? '';
+        $confirmer = $_POST['confirmer_mot_de_passe'] ?? '';
+
+        $userStmt = $pdo->prepare('SELECT mot_de_passe FROM utilisateurs WHERE id = :id');
+        $userStmt->execute([':id' => $userId]);
+        $hash = $userStmt->fetchColumn();
+
+        if (!$hash || !password_verify($actuel, $hash)) {
+            $message_erreur = 'L\'ancien mot de passe est incorrect.';
+        } elseif (strlen($nouveau) < 8) {
+            $message_erreur = 'Le nouveau mot de passe doit contenir au moins 8 caractères.';
+        } elseif ($nouveau !== $confirmer) {
+            $message_erreur = 'Les mots de passe ne correspondent pas.';
+        } else {
+            $pdo->prepare('UPDATE utilisateurs SET mot_de_passe = :hash WHERE id = :id')
+                ->execute([
+                    ':hash' => password_hash($nouveau, PASSWORD_DEFAULT),
+                    ':id' => $userId,
+                ]);
+            $message_succes = 'Mot de passe mis à jour avec succès.';
+        }
+    } elseif (isset($_POST['supprimer_compte'])) {
+        $pdo->prepare('DELETE FROM offres WHERE id_utilisateur = :id')->execute([':id' => $userId]);
+        $pdo->prepare('DELETE FROM utilisateurs WHERE id = :id')->execute([':id' => $userId]);
+        $_SESSION = [];
+        session_destroy();
+        redirect('../login.php');
+    }
+}
+
+$stmt = $pdo->prepare('SELECT id, nom, email, role FROM utilisateurs WHERE id = :id');
+$stmt->execute([':id' => $userId]);
+$utilisateur = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$utilisateur) {
+    redirect('../login.php');
+}
+
+$utilisateur['date_inscription'] = null;
+$nom_utilisateur = $utilisateur['nom'];
+
+$statsStmt = $pdo->prepare(
+    'SELECT
+        COUNT(*) AS total,
+        SUM(CASE WHEN statut = \'acceptee\' THEN 1 ELSE 0 END) AS acceptees
+     FROM offres
+     WHERE id_utilisateur = :id'
+);
+$statsStmt->execute([':id' => $userId]);
+$stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
+
+$nb_offres_total = (int) ($stats['total'] ?? 0);
+$nb_offres_acceptee = (int) ($stats['acceptees'] ?? 0);
 ?>
 <!DOCTYPE html>
 <html lang="fr">

@@ -1,10 +1,10 @@
 <?php
-    // Formulaire d'ajout d'une vache
-    // TODO (toi) : session_start(), vérifier role = 'admin',
-    // puis traiter l'envoi vers actions/ajouter_vache.php
-    // (INSERT INTO vaches (nom, age, poids, description, statut, id_admin) VALUES (...))
+require_once __DIR__ . '/../includes/session.php';
+require_once __DIR__ . '/../includes/functions.php';
 
-    $adminNom = "Admin"; // $_SESSION['nom']
+requireAdmin();
+
+$adminNom = $_SESSION['nom'];
 ?>
 <!DOCTYPE html>
 <html lang="fr">

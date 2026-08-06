@@ -1,23 +1,49 @@
 <?php
-    // Affiche le tableau de bord admin
-    // TODO (toi) : session_start(), vérifier que l'utilisateur connecté a role = 'admin',
-    // puis remplacer les variables ci-dessous par de vraies requêtes sur utilisateurs / vaches / offres.
+require_once __DIR__ . '/../includes/session.php';
+require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../config/database.php';
 
-    // --- Exemples de variables à alimenter depuis la base ---
-    $adminNom = "Admin"; // $_SESSION['nom']
+requireAdmin();
 
-    $nbVachesDisponibles = 0; // SELECT COUNT(*) FROM vaches WHERE statut = 'disponible'
-    $nbVachesVendues      = 0; // SELECT COUNT(*) FROM vaches WHERE statut = 'vendue'
-    $nbOffresEnAttente    = 0; // SELECT COUNT(*) FROM offres WHERE statut = 'en_attente'
-    $revenuTotal          = 0; // SELECT SUM(montant_propose) FROM offres WHERE statut = 'acceptee'
+$adminNom = $_SESSION['nom'];
+$adminId = (int) $_SESSION['user_id'];
 
-    // Tableau d'offres récentes à remplir depuis la base, ex:
-    // SELECT o.id, o.montant_propose, o.date_offre, o.statut, u.nom AS acheteur, v.nom AS vache
-    // FROM offres o JOIN utilisateurs u ON o.id_utilisateur = u.id JOIN vaches v ON o.id_vache = v.id
-    // ORDER BY o.date_offre DESC LIMIT 8
-    $offresRecentes = [
-        // ['id' => 1, 'vache' => 'Vache N°0231', 'acheteur' => 'Karim B.', 'montant' => 17500, 'date' => '2026-08-04 10:12', 'statut' => 'en_attente'],
-    ];
+$countStmt = $pdo->prepare("SELECT COUNT(*) FROM vaches WHERE statut = 'disponible' AND id_admin = :id_admin");
+$countStmt->execute([':id_admin' => $adminId]);
+$nbVachesDisponibles = (int) $countStmt->fetchColumn();
+
+$countStmt = $pdo->prepare("SELECT COUNT(*) FROM vaches WHERE statut = 'vendue' AND id_admin = :id_admin");
+$countStmt->execute([':id_admin' => $adminId]);
+$nbVachesVendues = (int) $countStmt->fetchColumn();
+
+$countStmt = $pdo->prepare(
+    "SELECT COUNT(*) FROM offres o
+     JOIN vaches v ON o.id_vache = v.id
+     WHERE o.statut = 'en_attente' AND v.id_admin = :id_admin"
+);
+$countStmt->execute([':id_admin' => $adminId]);
+$nbOffresEnAttente = (int) $countStmt->fetchColumn();
+
+$sumStmt = $pdo->prepare(
+    "SELECT COALESCE(SUM(o.montant_propose), 0) FROM offres o
+     JOIN vaches v ON o.id_vache = v.id
+     WHERE o.statut = 'acceptee' AND v.id_admin = :id_admin"
+);
+$sumStmt->execute([':id_admin' => $adminId]);
+$revenuTotal = (float) $sumStmt->fetchColumn();
+
+$offresStmt = $pdo->prepare(
+    'SELECT o.id, o.montant_propose AS montant, o.date_offre AS date, o.statut,
+            u.nom AS acheteur, v.nom AS vache
+     FROM offres o
+     JOIN utilisateurs u ON o.id_utilisateur = u.id
+     JOIN vaches v ON o.id_vache = v.id
+     WHERE v.id_admin = :id_admin
+     ORDER BY o.date_offre DESC
+     LIMIT 8'
+);
+$offresStmt->execute([':id_admin' => $adminId]);
+$offresRecentes = $offresStmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="fr">

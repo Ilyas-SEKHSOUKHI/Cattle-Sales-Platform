@@ -1,13 +1,16 @@
 <?php
-    // Liste du cheptel
-    // TODO (toi) : session_start(), vérifier role = 'admin',
-    // puis remplacer $vaches par : SELECT * FROM vaches WHERE id_admin = ? ORDER BY id DESC
+require_once __DIR__ . '/../includes/session.php';
+require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../config/database.php';
 
-    $adminNom = "Admin"; // $_SESSION['nom']
+requireAdmin();
 
-    $vaches = [
-        // ['id' => 1, 'nom' => 'Vache Sardi', 'age' => 3, 'poids' => 420, 'statut' => 'disponible'],
-    ];
+$adminNom = $_SESSION['nom'];
+$adminId = (int) $_SESSION['user_id'];
+
+$stmt = $pdo->prepare('SELECT id, nom, age, poids, statut FROM vaches WHERE id_admin = :id_admin ORDER BY id DESC');
+$stmt->execute([':id_admin' => $adminId]);
+$vaches = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="fr">

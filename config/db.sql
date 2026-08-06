@@ -1,4 +1,7 @@
-CREATE TABLE utilisateurs (
+CREATE DATABASE IF NOT EXISTS tarmast_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE tarmast_db;
+
+CREATE TABLE IF NOT EXISTS utilisateurs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nom VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
@@ -6,7 +9,7 @@ CREATE TABLE utilisateurs (
     role ENUM('acheteur','admin') DEFAULT 'acheteur'
 );
 
-CREATE TABLE vaches (
+CREATE TABLE IF NOT EXISTS vaches (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nom VARCHAR(100) NOT NULL,
     age INT,
@@ -17,7 +20,7 @@ CREATE TABLE vaches (
     FOREIGN KEY (id_admin) REFERENCES utilisateurs(id)
 );
 
-CREATE TABLE offres (
+CREATE TABLE IF NOT EXISTS offres (
     id INT AUTO_INCREMENT PRIMARY KEY,
     montant_propose DECIMAL(10,2) NOT NULL,
     date_offre DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -27,3 +30,8 @@ CREATE TABLE offres (
     FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id),
     FOREIGN KEY (id_vache) REFERENCES vaches(id)
 );
+
+-- Compte admin par défaut : admin@tarmast.ma / admin123
+INSERT INTO utilisateurs (nom, email, mot_de_passe, role)
+SELECT 'Admin Jibal', 'admin@tarmast.ma', '$2y$10$QDy6PTk2w8i2mvcrP9oXxu45sJOEcrryKYrgSu0O4aJ1xpF7YV7Tq', 'admin'
+WHERE NOT EXISTS (SELECT 1 FROM utilisateurs WHERE email = 'admin@tarmast.ma');

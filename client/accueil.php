@@ -1,35 +1,43 @@
 <?php
-/**
- * client/accueil.php
- * -------------------------------------------------
- * Page "cheptel disponible" côté client.
- * La logique (session, requête $vaches, filtres, pagination) est à ta charge.
- *
- * Basé sur ton schéma réel (table `vaches`) :
- *   id, nom, age, poids, description, statut, id_admin
- *
- * Variables attendues par ce template :
- *
- *   $vaches = [
- *      [
- *        'id'          => 1,
- *        'nom'         => 'Zahra',
- *        'age'         => 4,           // années
- *        'poids'       => 620.00,      // kg (decimal)
- *        'description' => 'Vache Holstein en excellente santé, bonne productrice.',
- *        'statut'      => 'disponible', // 'disponible' | 'vendue'
- *      ],
- *      ...
- *   ];
- *
- *   $nom_utilisateur = 'Ahmed';         // colonne `nom` de utilisateurs, pour la navbar
- *   $filtres = [ 'recherche' => '', 'tri' => 'recent' ]; // valeurs actuelles des filtres (GET)
- *
- * Inclusions attendues (adapte les chemins selon ta structure) :
- *   require_once __DIR__ . '/../includes/session.php';
- *   ... préparation de $vaches, $nom_utilisateur, $filtres en PHP ...
- * -------------------------------------------------
- */
+require_once __DIR__ . '/../includes/session.php';
+require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../config/database.php';
+
+requireAcheteur('../login.php', '../admin/dashboard.php');
+
+$nom_utilisateur = $_SESSION['nom'];
+
+$filtres = [
+    'recherche' => trim($_GET['recherche'] ?? ''),
+    'tri' => $_GET['tri'] ?? 'recent',
+];
+
+$sql = "SELECT id, nom, age, poids, description, statut FROM vaches WHERE statut = 'disponible'";
+$params = [];
+
+if ($filtres['recherche'] !== '') {
+    $sql .= ' AND nom LIKE :recherche';
+    $params[':recherche'] = '%' . $filtres['recherche'] . '%';
+}
+
+switch ($filtres['tri']) {
+    case 'age_asc':
+        $sql .= ' ORDER BY age ASC';
+        break;
+    case 'age_desc':
+        $sql .= ' ORDER BY age DESC';
+        break;
+    case 'poids_desc':
+        $sql .= ' ORDER BY poids DESC';
+        break;
+    default:
+        $sql .= ' ORDER BY id DESC';
+        break;
+}
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute($params);
+$vaches = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="fr">

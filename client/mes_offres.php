@@ -1,35 +1,21 @@
 <?php
-/**
- * client/mes_offres.php
- * -------------------------------------------------
- * Historique des offres envoyées par l'acheteur connecté.
- * La logique (session, requête $mes_offres) est à ta charge.
- *
- * Basé sur ton schéma réel (table `offres` + `vaches`) :
- *
- *   $mes_offres = [
- *      [
- *        'id'              => 1,
- *        'id_vache'        => 3,
- *        'vache'           => 'Zahra',
- *        'montant_propose' => 13500.00,
- *        'statut'          => 'en_attente', // 'en_attente' | 'acceptee' | 'refusee'
- *        'date_offre'      => '2026-08-05 10:12',
- *      ],
- *      ...
- *   ];
- *
- *   $nom_utilisateur = 'Ahmed';
- *
- * Requête suggérée :
- *   SELECT o.id, o.montant_propose, o.date_offre, o.statut, v.id AS id_vache, v.nom AS vache
- *   FROM offres o
- *   JOIN vaches v ON o.id_vache = v.id
- *   WHERE o.id_utilisateur = ?
- *   ORDER BY o.date_offre DESC
- * -------------------------------------------------
- */
-$mes_offres = $mes_offres ?? [];
+require_once __DIR__ . '/../includes/session.php';
+require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../config/database.php';
+
+requireAcheteur('../login.php', '../admin/dashboard.php');
+
+$nom_utilisateur = $_SESSION['nom'];
+
+$stmt = $pdo->prepare(
+    'SELECT o.id, o.montant_propose, o.date_offre, o.statut, v.id AS id_vache, v.nom AS vache
+     FROM offres o
+     JOIN vaches v ON o.id_vache = v.id
+     WHERE o.id_utilisateur = :id_utilisateur
+     ORDER BY o.date_offre DESC'
+);
+$stmt->execute([':id_utilisateur' => (int) $_SESSION['user_id']]);
+$mes_offres = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="fr">

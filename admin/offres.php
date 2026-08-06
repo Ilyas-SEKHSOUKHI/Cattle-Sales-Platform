@@ -1,19 +1,24 @@
 <?php
-    // Liste des offres reçues
-    // TODO (toi) : session_start(), vérifier role = 'admin',
-    // puis remplacer $offres par :
-    // SELECT o.id, o.montant_propose, o.date_offre, o.statut, u.nom AS acheteur, v.nom AS vache
-    // FROM offres o
-    // JOIN utilisateurs u ON o.id_utilisateur = u.id
-    // JOIN vaches v ON o.id_vache = v.id
-    // WHERE v.id_admin = ?
-    // ORDER BY o.date_offre DESC
+require_once __DIR__ . '/../includes/session.php';
+require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../config/database.php';
 
-    $adminNom = "Admin"; // $_SESSION['nom']
+requireAdmin();
 
-    $offres = [
-        // ['id' => 1, 'vache' => 'Vache Sardi', 'acheteur' => 'Karim B.', 'montant' => 13800, 'date' => '2026-08-05 10:12', 'statut' => 'en_attente'],
-    ];
+$adminNom = $_SESSION['nom'];
+$adminId = (int) $_SESSION['user_id'];
+
+$offresStmt = $pdo->prepare(
+    'SELECT o.id, o.montant_propose AS montant, o.date_offre AS date, o.statut,
+            u.nom AS acheteur, v.nom AS vache
+     FROM offres o
+     JOIN utilisateurs u ON o.id_utilisateur = u.id
+     JOIN vaches v ON o.id_vache = v.id
+     WHERE v.id_admin = :id_admin
+     ORDER BY o.date_offre DESC'
+);
+$offresStmt->execute([':id_admin' => $adminId]);
+$offres = $offresStmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
