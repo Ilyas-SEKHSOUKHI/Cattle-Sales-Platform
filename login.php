@@ -1,5 +1,8 @@
 <?php
-    //Affiche le formulaire de connexion
+require_once __DIR__ . '/includes/session.php';
+
+$authErrors = $_SESSION['auth_errors'] ?? [];
+unset($_SESSION['auth_errors']);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -100,6 +103,28 @@
     margin-bottom: 1.5rem;
   }
 
+  .auth-alert{
+    display:flex;
+    align-items:flex-start;
+    gap:.65rem;
+    padding: .85rem 1rem;
+    border-radius: 12px;
+    font-size: .88rem;
+    font-weight: 600;
+    line-height: 1.45;
+    margin-bottom: 1.2rem;
+    border: 1px solid rgba(166,81,46,.25);
+    background: rgba(166,81,46,.1);
+    color: var(--rust);
+  }
+  .auth-alert svg{ width:18px; height:18px; flex-shrink:0; margin-top:1px; }
+  .auth-alert ul{
+    margin: .35rem 0 0 1.1rem;
+    padding: 0;
+    list-style: disc;
+  }
+  .auth-alert li{ font-weight: 500; }
+
   .field{ margin-bottom: 1rem; }
   .field label{
     display:block;
@@ -184,10 +209,28 @@
     <h2>Connexion</h2>
     <p class="auth-sub">Accédez à votre compte pour proposer un prix sur le cheptel.</p>
 
+    <?php if (!empty($authErrors)): ?>
+      <div class="auth-alert" role="alert">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 9v4m0 4h.01M10.3 3.9L2.7 17a2 2 0 001.7 3h15.2a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <?php if (count($authErrors) === 1): ?>
+          <span><?php echo htmlspecialchars($authErrors[0]); ?></span>
+        <?php else: ?>
+          <div>
+            <span>Veuillez corriger les erreurs suivantes :</span>
+            <ul>
+              <?php foreach ($authErrors as $error): ?>
+                <li><?php echo htmlspecialchars($error); ?></li>
+              <?php endforeach; ?>
+            </ul>
+          </div>
+        <?php endif; ?>
+      </div>
+    <?php endif; ?>
+
     <form action="actions/login.php" method="POST">
         <div class="field">
             <label for="inputEmailLogin">Email</label>
-            <input type="text" name="email" id="inputEmailLogin" required>
+            <input type="email" name="email" id="inputEmailLogin" required>
         </div>
         <div class="field">
             <label for="inputPasswordLogin">Mot de passe</label>
