@@ -667,7 +667,8 @@
     </button>
   </div>
 </header>
-
+<!--Banner Ferme Tarmast-->
+<img src="assets/images/banner-ferme-tarmast.png" alt="Banner Ferme Tarmast" width="50%" style="display: block; margin: 0 auto;">
 <!-- ================= HERO ================= -->
 <section class="hero">
   <div class="container">
