@@ -814,7 +814,7 @@
     setInterval(() => {
       currentSlide = (currentSlide + 1) % heroSlides.length;
       renderSlide();
-    }, 2000);
+    }, 5000);
 
     renderSlide();
   }
