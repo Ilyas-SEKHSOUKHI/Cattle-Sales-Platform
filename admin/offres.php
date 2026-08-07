@@ -15,9 +15,18 @@ if (!in_array($filtre, array_merge(['tous'], $statutsOffres), true)) {
     $filtre = 'tous';
 }
 
+$hasDateReprise = tableHasColumn($pdo, 'offres', 'date_reprise');
+
 $sql = 'SELECT o.id, o.montant_propose AS montant, o.date_offre AS date, o.statut,
-               u.nom AS acheteur, u.email, u.telephone, v.nom AS vache
-        FROM offres o
+               u.nom AS acheteur, u.email, u.telephone, v.nom AS vache';
+
+if ($hasDateReprise) {
+    $sql .= ', o.date_reprise';
+} else {
+    $sql .= ', NULL AS date_reprise';
+}
+
+$sql .= ' FROM offres o
         JOIN utilisateurs u ON o.id_utilisateur = u.id
         JOIN vaches v ON o.id_vache = v.id
         WHERE v.id_admin = :id_admin';
@@ -37,6 +46,8 @@ if ($filtre !== 'tous') {
 
 $offresStmt->execute($params);
 $offres = $offresStmt->fetchAll(PDO::FETCH_ASSOC);
+$flash = $_SESSION['flash'] ?? null;
+unset($_SESSION['flash']);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -277,7 +288,38 @@ $offres = $offresStmt->fetchAll(PDO::FETCH_ASSOC);
   .badge.acceptee{ background: rgba(76,175,80,.14); color: var(--green-dark); }
   .badge.refusee{ background: rgba(166,81,46,.12); color: var(--rust); }
 
-  .row-actions{ display:flex; gap:.5rem; }
+  .row-actions{ display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; }
+  .modal-overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 42, 32, .55);
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    z-index: 200;
+  }
+  .modal-overlay[hidden]{ display: none; }
+  .modal-dialog{
+    width: min(460px, 100%);
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid var(--line);
+    box-shadow: 0 18px 42px rgba(20, 42, 32, .22);
+    padding: 1.3rem;
+  }
+  .modal-dialog h3{ font-size: 1.1rem; margin-bottom: .4rem; }
+  .modal-dialog p{ color: var(--ink-soft); font-size: .9rem; margin-bottom: 1rem; }
+  .recovery-form{ display:flex; flex-direction:column; gap:.7rem; }
+  .recovery-form label{ font-size:.85rem; font-weight:700; color: var(--forest); }
+  .recovery-form input[type="date"]{
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: .62rem .7rem;
+    font-size: .9rem;
+    color: var(--ink);
+    background: #fff;
+  }
+  .modal-actions{ display:flex; justify-content:flex-end; gap:.6rem; margin-top:.3rem; }
   .btn-mini{
     border:none;
     border-radius: 7px;
@@ -396,6 +438,12 @@ $offres = $offresStmt->fetchAll(PDO::FETCH_ASSOC);
       </div>
     </div>
 
+    <?php if (!empty($flash)): ?>
+      <div style="margin-bottom:1rem; padding:.85rem 1rem; border-radius:10px; background: <?php echo $flash['type'] === 'error' ? '#fbecec' : '#eaf7eb'; ?>; color: <?php echo $flash['type'] === 'error' ? '#8c2f2f' : '#2f6b3d'; ?>; border: 1px solid <?php echo $flash['type'] === 'error' ? '#e7b7b7' : '#b9d9bc'; ?>;">
+        <?php echo htmlspecialchars($flash['message']); ?>
+      </div>
+    <?php endif; ?>
+
     <div class="panel">
       <div class="panel-head">
         <div>
@@ -456,17 +504,16 @@ $offres = $offresStmt->fetchAll(PDO::FETCH_ASSOC);
             <td data-label="Actions">
               <?php if ($offre['statut'] === 'en_attente'): ?>
               <div class="row-actions">
-                <form action="../actions/accepter_offre.php" method="POST">
-                  <input type="hidden" name="id_offre" value="<?php echo (int)$offre['id']; ?>">
-                  <button type="submit" class="btn-mini accept">Accepter</button>
-                </form>
+                <button type="button" class="btn-mini accept open-recovery-modal" data-offre-id="<?php echo (int)$offre['id']; ?>">Accepter</button>
                 <form action="../actions/refuser_offre.php" method="POST">
                   <input type="hidden" name="id_offre" value="<?php echo (int)$offre['id']; ?>">
                   <button type="submit" class="btn-mini refuse">Refuser</button>
                 </form>
               </div>
               <?php else: ?>
-              <span style="color:var(--ink-soft); font-size:.85rem;">—</span>
+              <span style="color:var(--ink-soft); font-size:.85rem;">
+                <?php if (!empty($offre['date_reprise'])): echo 'Récupération: ' . date('d/m/Y', strtotime($offre['date_reprise'])); else: echo '—'; endif; ?>
+              </span>
               <?php endif; ?>
             </td>
           </tr>
@@ -480,6 +527,60 @@ $offres = $offresStmt->fetchAll(PDO::FETCH_ASSOC);
 
   </main>
 </div>
+
+<div id="recoveryModal" class="modal-overlay" hidden>
+  <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="recoveryModalTitle">
+    <h3 id="recoveryModalTitle">Date de récupération</h3>
+    <p>Choisissez la date à laquelle l’acheteur viendra récupérer son bovin.</p>
+    <form action="../actions/accepter_offre.php" method="POST" class="recovery-form">
+      <input type="hidden" name="id_offre" id="modalOfferId">
+      <label for="modalDateReprise">Date de récupération</label>
+      <input type="date" id="modalDateReprise" name="date_reprise" required>
+      <div class="modal-actions">
+        <button type="button" class="btn-mini refuse modal-cancel">Annuler</button>
+        <button type="submit" class="btn-mini accept">Accepter</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const modal = document.getElementById('recoveryModal');
+  const offerIdInput = document.getElementById('modalOfferId');
+  const dateInput = document.getElementById('modalDateReprise');
+  const openButtons = document.querySelectorAll('.open-recovery-modal');
+  const cancelButtons = document.querySelectorAll('.modal-cancel');
+
+  const closeModal = () => {
+    modal.hidden = true;
+    offerIdInput.value = '';
+    dateInput.value = '';
+  };
+
+  openButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      offerIdInput.value = button.dataset.offreId || '';
+      modal.hidden = false;
+      dateInput.focus();
+    });
+  });
+
+  cancelButtons.forEach((button) => {
+    button.addEventListener('click', closeModal);
+  });
+
+  modal.addEventListener('click', (event) => {
+    if (event.target === modal) {
+      closeModal();
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !modal.hidden) {
+      closeModal();
+    }
+  });
+</script>
 
 </body>
 </html>

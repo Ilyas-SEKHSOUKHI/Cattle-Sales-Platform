@@ -8,13 +8,23 @@ requireAcheteur('../login.php', '../admin/dashboard.php');
 $nom_utilisateur = $_SESSION['nom'];
 $userId = (int) $_SESSION['user_id'];
 
-$stmt = $pdo->prepare(
-    'SELECT o.id, o.montant_propose, o.date_offre, o.statut, v.id AS id_vache, v.nom AS vache
-     FROM offres o
-     JOIN vaches v ON o.id_vache = v.id
-     WHERE o.id_utilisateur = :id_utilisateur
-     ORDER BY o.date_offre DESC'
-);
+$hasDateReprise = tableHasColumn($pdo, 'offres', 'date_reprise');
+
+$sql = 'SELECT o.id, o.montant_propose, o.date_offre, o.statut';
+
+if ($hasDateReprise) {
+    $sql .= ', o.date_reprise';
+} else {
+    $sql .= ', NULL AS date_reprise';
+}
+
+$sql .= ', v.id AS id_vache, v.nom AS vache
+         FROM offres o
+         JOIN vaches v ON o.id_vache = v.id
+         WHERE o.id_utilisateur = :id_utilisateur
+         ORDER BY o.date_offre DESC';
+
+$stmt = $pdo->prepare($sql);
 $stmt->execute([':id_utilisateur' => $userId]);
 $toutesLesOffres = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -358,7 +368,12 @@ $mes_offres = $filtre === 'tous'
                 ?>
               </span>
             </td>
-            <td data-label="Date"><?php echo date('d/m/Y H:i', strtotime($offre['date_offre'])); ?></td>
+            <td data-label="Date">
+              <?php echo date('d/m/Y H:i', strtotime($offre['date_offre'])); ?>
+              <?php if (!empty($offre['date_reprise'])): ?>
+                <div style="margin-top:.3rem; font-size:.78rem; color:var(--green-dark); font-weight:600;">Récupération : <?php echo date('d/m/Y', strtotime($offre['date_reprise'])); ?></div>
+              <?php endif; ?>
+            </td>
             <td data-label="Fiche" style="text-align:right;">
               <a href="details_vache.php?id=<?php echo (int)$offre['id_vache']; ?>" class="view-link">Voir la fiche</a>
             </td>

@@ -190,3 +190,31 @@ function deleteVacheImage(?string $imagePath): void
         unlink($fullPath);
     }
 }
+
+function tableHasColumn(PDO $pdo, string $table, string $column): bool
+{
+    static $cache = [];
+    $key = $table . '.' . $column;
+
+    if (array_key_exists($key, $cache)) {
+        return $cache[$key];
+    }
+
+    $stmt = $pdo->query("SHOW COLUMNS FROM `$table`");
+    $columns = $stmt ? $stmt->fetchAll(PDO::FETCH_COLUMN) : [];
+    $exists = in_array($column, $columns, true);
+    $cache[$key] = $exists;
+
+    return $exists;
+}
+
+function ensureColumnExists(PDO $pdo, string $table, string $column, string $definition): bool
+{
+    if (tableHasColumn($pdo, $table, $column)) {
+        return true;
+    }
+
+    $pdo->exec("ALTER TABLE `$table` ADD COLUMN `$column` $definition");
+
+    return tableHasColumn($pdo, $table, $column);
+}

@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS vaches (
     description TEXT,
     image VARCHAR(255),
     statut ENUM('disponible','vendue') DEFAULT 'disponible',
+    date_reprise DATE NULL,
     id_admin INT NOT NULL,
     FOREIGN KEY (id_admin) REFERENCES utilisateurs(id)
 );
@@ -37,6 +38,7 @@ CREATE TABLE IF NOT EXISTS offres (
     montant_propose DECIMAL(10,2) NOT NULL,
     date_offre DATETIME DEFAULT CURRENT_TIMESTAMP,
     statut ENUM('en_attente','acceptee','refusee') DEFAULT 'en_attente',
+    date_reprise DATE NULL,
     id_utilisateur INT NOT NULL,
     id_vache INT NOT NULL,
     FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id),
