@@ -2,7 +2,9 @@
 require_once __DIR__ . '/includes/session.php';
 
 $authErrors = $_SESSION['auth_errors'] ?? [];
-unset($_SESSION['auth_errors']);
+$authSuccess = $_SESSION['auth_success'] ?? '';
+$authVerifyUrl = $_SESSION['auth_verify_url'] ?? '';
+unset($_SESSION['auth_errors'], $_SESSION['auth_success'], $_SESSION['auth_verify_url']);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -224,6 +226,18 @@ unset($_SESSION['auth_errors']);
             </ul>
           </div>
         <?php endif; ?>
+      </div>
+    <?php endif; ?>
+
+    <?php if (!empty($authSuccess)): ?>
+      <div class="auth-alert" role="status" style="background: rgba(76,175,80,.12); border-color: rgba(76,175,80,.26); color: var(--forest);">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div>
+          <span><?php echo htmlspecialchars($authSuccess); ?></span>
+          <?php if (!empty($authVerifyUrl)): ?>
+            <div style="margin-top:.45rem;"><a href="<?php echo htmlspecialchars($authVerifyUrl); ?>" style="color:var(--green-dark); font-weight:700;">Ouvrir le lien de validation</a></div>
+          <?php endif; ?>
+        </div>
       </div>
     <?php endif; ?>
 

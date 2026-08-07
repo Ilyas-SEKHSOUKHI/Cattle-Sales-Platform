@@ -1,0 +1,6 @@
+{
+  "require": {
+    "mailtrap/mailtrap": "^3.0",
+    "symfony/mime": "^6.0"
+  }
+}

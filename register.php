@@ -2,8 +2,9 @@
 require_once __DIR__ . '/includes/session.php';
 
 $authErrors = $_SESSION['auth_errors'] ?? [];
+$authSuccess = $_SESSION['auth_success'] ?? '';
 $oldInput = $_SESSION['auth_old'] ?? [];
-unset($_SESSION['auth_errors'], $_SESSION['auth_old']);
+unset($_SESSION['auth_errors'], $_SESSION['auth_old'], $_SESSION['auth_success']);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -226,6 +227,13 @@ unset($_SESSION['auth_errors'], $_SESSION['auth_old']);
             </ul>
           </div>
         <?php endif; ?>
+      </div>
+    <?php endif; ?>
+
+    <?php if (!empty($authSuccess)): ?>
+      <div class="auth-alert" role="status" style="background: rgba(76,175,80,.12); border-color: rgba(76,175,80,.26); color: var(--forest);">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span><?php echo htmlspecialchars($authSuccess); ?></span>
       </div>
     <?php endif; ?>
 

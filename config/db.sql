@@ -7,7 +7,11 @@ CREATE TABLE IF NOT EXISTS utilisateurs (
     email VARCHAR(150) UNIQUE NOT NULL,
     telephone VARCHAR(20) NOT NULL,
     mot_de_passe VARCHAR(255) NOT NULL,
-    role ENUM('acheteur','admin') DEFAULT 'acheteur'
+    role ENUM('acheteur','admin') DEFAULT 'acheteur',
+    email_verified TINYINT(1) NOT NULL DEFAULT 0,
+    verification_token VARCHAR(64) NULL,
+    verification_sent_at DATETIME NULL,
+    last_login_at DATETIME NULL
 );
 
 -- Migration pour bases existantes :
