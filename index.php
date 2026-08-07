@@ -256,6 +256,7 @@
     overflow: hidden;
     border: 1px solid var(--line);
     transform: rotate(-2deg);
+    position: relative;
   }
   .listing-photo{
     height: 190px;
@@ -265,14 +266,11 @@
     position: relative;
     overflow: hidden;
   }
-  /* Photo de vache : assets/images/Vache.jpg
-     Si l'image est absente, le SVG de secours reste visible. */
   .listing-photo .cow-photo{
     position:absolute; inset:0;
     width:100%; height:100%;
     object-fit: cover;
   }
-  .listing-photo .cow-svg{ position:absolute; inset:0; margin:auto; width: 64%; }
   .listing-tag{
     position:absolute;
     top: 12px; left: 12px;
@@ -346,6 +344,23 @@
     transition: background .2s;
   }
   .offer-box button:hover{ background: var(--green-dark); }
+  .hero-carousel-dots{
+    display:flex;
+    justify-content:center;
+    gap:.45rem;
+    margin-top: .9rem;
+  }
+  .hero-carousel-dots span{
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--line);
+    transition: all .2s ease;
+  }
+  .hero-carousel-dots span.active{
+    background: var(--green);
+    transform: scale(1.15);
+  }
 
   /* ear tag stamp - signature element */
   .ear-tag{
@@ -699,43 +714,111 @@
         <text x="60" y="76" text-anchor="middle" font-family="Work Sans, sans-serif" font-size="18" fill="#A6512E" font-weight="700">N° 0231</text>
       </svg>
 
-      <div class="listing-card">
-        <div class="listing-photo">
-          <span class="listing-tag">N° 0231 · Disponible</span>
-
-          <!-- Photo : assets/images/Vache.jpg — SVG de secours si fichier absent -->
-          <img class="cow-photo" src="assets/images/Vache.jpg"
-               alt="Vache laitière disponible à la Ferme Tarmast"
-               onerror="this.style.display='none'">
-          <!--
-          <svg class="cow-svg" viewBox="0 0 200 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <ellipse cx="100" cy="90" rx="70" ry="34" fill="#F2EAD8"/>
-            <ellipse cx="60" cy="70" rx="16" ry="20" fill="#F2EAD8"/>
-            <circle cx="50" cy="58" r="4" fill="#1B3A2B"/>
-            <path d="M46 50c-2-6 2-10 6-8M64 50c2-6-2-10-6-8" stroke="#1B3A2B" stroke-width="2" stroke-linecap="round"/>
-            <ellipse cx="120" cy="95" rx="14" ry="9" fill="#A6512E" opacity=".7"/>
-            <ellipse cx="90" cy="95" rx="10" ry="12" fill="#1B3A2B" opacity=".55"/>
-            <path d="M40 118l0 14M70 122l0 14M110 122l0 14M140 118l0 14" stroke="#1B3A2B" stroke-width="6" stroke-linecap="round"/>
-          </svg>-->
-        </div>
-        <div class="listing-body">
-          <h4>Vache laitière — Holstein</h4>
-          <p class="meta">4 ans · 620 kg · ~26 L/jour · Ferme Tarmast</p>
-          <div class="listing-price-row">
-            <span class="label">Prix demandé</span>
-            <span class="price">18 500 DH</span>
+      <div>
+        <div class="listing-card" id="heroCarouselCard">
+          <div class="listing-photo">
+            <span class="listing-tag" id="heroCarouselTag">N° 0231 · Disponible</span>
+            <img class="cow-photo" id="heroCarouselImage" src="assets/images/vache/vache_1.jpg" alt="Vache disponible à la Ferme Tarmast" onerror="this.src='assets/images/vache/vache.jpg'">
           </div>
-          <div class="offer-box">
-            <input type="text" placeholder="Votre offre (DH)" aria-label="Votre offre en dirhams">
-            <button type="button">Proposer</button>
+          <div class="listing-body">
+            <h4 id="heroCarouselTitle">Vache laitière — Holstein</h4>
+            <p class="meta" id="heroCarouselMeta">4 ans · 620 kg · ~26 L/jour · Ferme Tarmast</p>
+            <div class="listing-price-row">
+              <span class="label">Prix demandé</span>
+              <span class="price" id="heroCarouselPrice">18 500 DH</span>
+            </div>
+            <div class="offer-box">
+              <input type="text" placeholder="Votre offre (DH)" aria-label="Votre offre en dirhams">
+              <button type="button">Proposer</button>
+            </div>
           </div>
         </div>
+        <div class="hero-carousel-dots" aria-label="Sélection de vaches" id="heroCarouselDots"></div>
       </div>
     </div>
   </div>
 </section>
 
 <div class="fence-divider"></div>
+
+<script>
+  const heroSlides = [
+    {
+      image: 'assets/images/vache/vache_1.jpg',
+      tag: 'N° 0231 · Disponible',
+      title: 'Vache laitière — Holstein',
+      meta: '4 ans · 620 kg · ~26 L/jour · Ferme Tarmast',
+      price: '18 500 DH'
+    },
+    {
+      image: 'assets/images/vache/vache_2.jpg',
+      tag: 'N° 0418 · Disponible',
+      title: 'Velle robuste — Montbéliarde',
+      meta: '3 ans · 590 kg · ~24 L/jour · Ferme Tarmast',
+      price: '16 800 DH'
+    },
+    {
+      image: 'assets/images/vache/vache_3.jpg',
+      tag: 'N° 0786 · Disponible',
+      title: 'Vache de race — Charolaise',
+      meta: '5 ans · 710 kg · ~28 L/jour · Ferme Tarmast',
+      price: '21 200 DH'
+    },
+    {
+      image: 'assets/images/vache/vache_4.jpg',
+      tag: 'N° 0942 · Disponible',
+      title: 'Vache de production — Holstein',
+      meta: '6 ans · 680 kg · ~27 L/jour · Ferme Tarmast',
+      price: '19 900 DH'
+    },
+    {
+      image: 'assets/images/vache/vache_5.jpg',
+      tag: 'N° 1024 · Disponible',
+      title: 'Vache jeune — Montbéliarde',
+      meta: '2 ans · 540 kg · ~22 L/jour · Ferme Tarmast',
+      price: '15 300 DH'
+    }
+  ];
+
+  const heroImage = document.getElementById('heroCarouselImage');
+  const heroTag = document.getElementById('heroCarouselTag');
+  const heroTitle = document.getElementById('heroCarouselTitle');
+  const heroMeta = document.getElementById('heroCarouselMeta');
+  const heroPrice = document.getElementById('heroCarouselPrice');
+  const heroDots = document.getElementById('heroCarouselDots');
+
+  if (heroImage && heroTag && heroTitle && heroMeta && heroPrice && heroDots) {
+    heroSlides.forEach((_, index) => {
+      const dot = document.createElement('span');
+      dot.dataset.index = String(index);
+      if (index === 0) dot.classList.add('active');
+      heroDots.appendChild(dot);
+    });
+
+    let currentSlide = 0;
+
+    const renderSlide = () => {
+      const slide = heroSlides[currentSlide];
+      heroImage.src = slide.image;
+      heroImage.alt = slide.title;
+      heroTag.textContent = slide.tag;
+      heroTitle.textContent = slide.title;
+      heroMeta.textContent = slide.meta;
+      heroPrice.textContent = slide.price;
+
+      Array.from(heroDots.children).forEach((dot, index) => {
+        dot.classList.toggle('active', index === currentSlide);
+      });
+    };
+
+    setInterval(() => {
+      currentSlide = (currentSlide + 1) % heroSlides.length;
+      renderSlide();
+    }, 2000);
+
+    renderSlide();
+  }
+</script>
 
 <!-- ================= STATS ================= -->
 <section class="stats">
