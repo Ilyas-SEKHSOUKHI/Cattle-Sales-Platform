@@ -457,12 +457,20 @@
   .step:last-child .step-arrow{ display:none; }
 
   /* ---- Products (dairy) ---- */
-  .products-grid{
-    display:grid;
-    grid-template-columns: repeat(4, 1fr);
+  .products-marquee{
+    overflow: hidden;
+    position: relative;
+    mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  }
+  .products-track{
+    display:flex;
+    width: max-content;
     gap: 1.3rem;
+    animation: products-scroll 24s linear infinite;
   }
   .product-card{
+    flex: 0 0 240px;
     background: var(--cream-2);
     border-radius: 14px;
     padding: 1.5rem 1.3rem;
@@ -493,6 +501,11 @@
     margin: 1rem 0 1rem;
   }
   .product-card p{ font-size: .88rem; color: var(--ink-soft); margin-top: .25rem; }
+
+  @keyframes products-scroll{
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
 
   /* ---- About the farm ---- */
   .about{
@@ -882,30 +895,56 @@
       <p>Découvrez les catégories de bovins disponibles à Ferme Tarmast, de la vache au bœuf.</p>
     </div>
 
-    <div class="products-grid">
-      <div class="product-card">
-        <img src="assets/images/lait_cru.jpg" alt="" style="border-radius: 10px;">
-        <span class="code">CAT 01</span>
-        <h4>Lait cru</h4>
-        <p>Vache de race laitière sélectionnée pour sa production.</p>
-      </div>
-      <div class="product-card">
-        <img src="assets/images/vache_1.jpg" alt="" style="border-radius: 10px;">
-        <span class="code">CAT 02</span>
-        <h4>Vache</h4>
-        <p>Femelle adulte élevée pour la reproduction et la production.</p>
-      </div>
-      <div class="product-card">
-        <img src="assets/images/veau.jpg" alt="" style="border-radius: 10px;">
-        <span class="code">CAT 03</span>
-        <h4>Veau / Velle</h4>
-        <p>Jeune bovin en croissance, prêt à rejoindre le cheptel.</p>
-      </div>
-      <div class="product-card">
-        <img src="assets/images/boeuf.jpg" alt="" style="border-radius: 10px;">
-        <span class="code">CAT 04</span>
-        <h4>Bœuf</h4>
-        <p>Variantes du cheptel selon l’âge, le sexe et l’usage.</p>
+    <div class="products-marquee">
+      <div class="products-track">
+        <div class="product-card">
+          <img src="assets/images/lait_cru.jpg" alt="" style="border-radius: 10px;">
+          <span class="code">CAT 01</span>
+          <h4>Lait cru</h4>
+          <p>Vache de race laitière sélectionnée pour sa production.</p>
+        </div>
+        <div class="product-card">
+          <img src="assets/images/vache_1.jpg" alt="" style="border-radius: 10px;">
+          <span class="code">CAT 02</span>
+          <h4>Vache</h4>
+          <p>Femelle adulte élevée pour la reproduction et la production.</p>
+        </div>
+        <div class="product-card">
+          <img src="assets/images/veau.jpg" alt="" style="border-radius: 10px;">
+          <span class="code">CAT 03</span>
+          <h4>Veau / Velle</h4>
+          <p>Jeune bovin en croissance, prêt à rejoindre le cheptel.</p>
+        </div>
+        <div class="product-card">
+          <img src="assets/images/boeuf.jpg" alt="" style="border-radius: 10px;">
+          <span class="code">CAT 04</span>
+          <h4>Bœuf</h4>
+          <p>Variantes du cheptel selon l’âge, le sexe et l’usage.</p>
+        </div>
+        <div class="product-card">
+          <img src="assets/images/lait_cru.jpg" alt="" style="border-radius: 10px;">
+          <span class="code">CAT 01</span>
+          <h4>Lait cru</h4>
+          <p>Vache de race laitière sélectionnée pour sa production.</p>
+        </div>
+        <div class="product-card">
+          <img src="assets/images/vache_1.jpg" alt="" style="border-radius: 10px;">
+          <span class="code">CAT 02</span>
+          <h4>Vache</h4>
+          <p>Femelle adulte élevée pour la reproduction et la production.</p>
+        </div>
+        <div class="product-card">
+          <img src="assets/images/veau.jpg" alt="" style="border-radius: 10px;">
+          <span class="code">CAT 03</span>
+          <h4>Veau / Velle</h4>
+          <p>Jeune bovin en croissance, prêt à rejoindre le cheptel.</p>
+        </div>
+        <div class="product-card">
+          <img src="assets/images/boeuf.jpg" alt="" style="border-radius: 10px;">
+          <span class="code">CAT 04</span>
+          <h4>Bœuf</h4>
+          <p>Variantes du cheptel selon l’âge, le sexe et l’usage.</p>
+        </div>
       </div>
     </div>
   </div>
