@@ -96,18 +96,22 @@ try {
     $verifyUrl = $scheme . '://' . $host . $basePath . '/actions/verify_email.php?token=' . urlencode($token);
 
     $subject = 'Validez votre compte Ferme Tarmast';
-    $message = "Bonjour $nom,\n\n";
-    $message .= "Merci pour votre inscription sur Ferme Tarmast.\n";
-    $message .= "Cliquez sur le lien ci-dessous pour valider votre compte :\n\n";
-    $message .= $verifyUrl . "\n\n";
-    $message .= "Si vous n'êtes pas à l'origine de cette inscription, vous pouvez ignorer cet email.";
+    $textMessage = "Bonjour $nom,\n\n";
+    $textMessage .= "Merci pour votre inscription sur Ferme Tarmast.\n";
+    $textMessage .= "Cliquez sur le lien ci-dessous pour valider votre compte :\n\n";
+    $textMessage .= $verifyUrl . "\n\n";
+    $textMessage .= "Si vous n'êtes pas à l'origine de cette inscription, vous pouvez ignorer cet email.";
+
+    $htmlMessage = str_replace('{YEAR}', date('Y'), buildVerificationEmailHtml($nom, $verifyUrl));
+
     $headers = [
         'From' => 'no-reply@fermetarmast.local',
         'Reply-To' => 'no-reply@fermetarmast.local',
         'Content-Type' => 'text/plain; charset=UTF-8',
     ];
 
-    $mailSent = sendMailWithFallback($email, $subject, $message, $headers);
+    $mailSent = sendMailWithFallback($email, $subject, $textMessage, $headers, $htmlMessage);
+
 
     $pdo->commit();
 

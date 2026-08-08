@@ -1,16 +1,12 @@
 <?php
 
 $smtpConfig = [
-    'enabled' => false,
-    'host' => getenv('SMTP_HOST') ?: '',
-    'port' => (int) (getenv('SMTP_PORT') ?: 587),
-    'username' => getenv('SMTP_USERNAME') ?: '',
-    'password' => getenv('SMTP_PASSWORD') ?: '',
-    'encryption' => getenv('SMTP_ENCRYPTION') ?: 'tls',
-    'from_email' => getenv('SMTP_FROM_EMAIL') ?: 'no-reply@fermetarmast.local',
-    'from_name' => getenv('SMTP_FROM_NAME') ?: 'Ferme Tarmast',
+    'enabled' => true,
+    'host' => 'live.smtp.mailtrap.io',
+    'port' => 587,
+    'username' => 'api',
+    'password' => '0fbafac4751f830a9a34fed9def3db1d',
+    'encryption' => 'tls',
+    'from_email' => 'hello@demomailtrap.co',
+    'from_name' => 'Ferme Tarmast',
 ];
-
-if (!empty($smtpConfig['host']) && !empty($smtpConfig['username']) && !empty($smtpConfig['password'])) {
-    $smtpConfig['enabled'] = true;
-}

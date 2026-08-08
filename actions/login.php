@@ -34,15 +34,17 @@ if ($utilisateur && password_verify($mot_de_passe, $utilisateur['mot_de_passe'])
     $_SESSION['role'] = $utilisateur['role'];
 
     $subject = 'Connexion réussie à Ferme Tarmast';
-    $message = "Bonjour {$utilisateur['nom']},\n\n";
-    $message .= "Votre connexion à Ferme Tarmast a bien été effectuée.\n";
-    $message .= "Si vous n’êtes pas à l’origine de cette connexion, contactez immédiatement l’administration.\n\n";
-    $message .= "Cordialement,\nL’équipe Ferme Tarmast";
+    $textMessage = "Bonjour {$utilisateur['nom']},\n\n";
+    $textMessage .= "Votre connexion à Ferme Tarmast a bien été effectuée.\n";
+    $textMessage .= "Si vous n'êtes pas à l'origine de cette connexion, contactez immédiatement l'administration.\n\n";
+    $textMessage .= "Cordialement,\nL'équipe Ferme Tarmast";
+
+    $htmlMessage = str_replace('{YEAR}', date('Y'), buildLoginNotificationEmailHtml($utilisateur['nom']));
 
     try {
-        sendMailWithFallback($utilisateur['email'], $subject, $message, []);
+        sendMailWithFallback($utilisateur['email'], $subject, $textMessage, [], $htmlMessage);
     } catch (Throwable $e) {
-        // L’email n’empêche pas la connexion.
+        // L'email n'empêche pas la connexion.
     }
 
     if ($utilisateur['role'] === 'admin') {
