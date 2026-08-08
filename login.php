@@ -39,7 +39,7 @@ unset($_SESSION['auth_errors'], $_SESSION['auth_success'], $_SESSION['auth_verif
 
   body{
     font-family: var(--body);
-    background: linear-gradient(135deg, #142A20 0%, #1B3A2B 50%, #142A20 100%);
+    background: var(--cream);
     color: var(--ink);
     min-height: 100vh;
     display:flex;
@@ -55,8 +55,8 @@ unset($_SESSION['auth_errors'], $_SESSION['auth_success'], $_SESSION['auth_verif
     inset:0;
     z-index: -1;
     background:
-      radial-gradient(600px 300px at 85% 10%, rgba(76,175,80,.25), transparent 70%),
-      radial-gradient(500px 260px at 10% 90%, rgba(201,144,47,.18), transparent 70%);
+      radial-gradient(600px 300px at 85% 10%, rgba(201,144,47,.14), transparent 70%),
+      radial-gradient(500px 260px at 10% 90%, rgba(76,175,80,.10), transparent 70%);
     pointer-events:none;
   }
 
@@ -77,22 +77,23 @@ unset($_SESSION['auth_errors'], $_SESSION['auth_success'], $_SESSION['auth_verif
     font-family: var(--display);
     font-size: 1.35rem;
     font-weight: 700;
-    color: #fff;
+    color: var(--forest);
     margin-bottom: 2rem;
   }
   .brand-mark{ width: 38px; height: 38px; flex-shrink: 0; }
 
   .auth-card{
-    background: #fff;
-    border: 1px solid var(--line);
+    background: linear-gradient(145deg, #1B3A2B 0%, #142A20 100%);
+    border: 1px solid rgba(27,58,43,.3);
     border-radius: 16px;
-    box-shadow: 0 20px 40px rgba(0,0,0,.25);
+    box-shadow: 0 20px 45px rgba(27,58,43,.25);
     padding: 1.9rem 1.8rem 1.7rem;
+    color: #fff;
   }
 
   .auth-card h2{
     font-family: var(--display);
-    color: var(--forest);
+    color: #fff;
     font-size: 1.4rem;
     font-weight: 600;
     margin-bottom: .3rem;
@@ -100,7 +101,7 @@ unset($_SESSION['auth_errors'], $_SESSION['auth_success'], $_SESSION['auth_verif
   }
   .auth-sub{
     text-align:center;
-    color: var(--ink-soft);
+    color: #C7D6CB;
     font-size: .87rem;
     margin-bottom: 1.5rem;
   }
@@ -115,9 +116,17 @@ unset($_SESSION['auth_errors'], $_SESSION['auth_success'], $_SESSION['auth_verif
     font-weight: 600;
     line-height: 1.45;
     margin-bottom: 1.2rem;
-    border: 1px solid rgba(166,81,46,.25);
-    background: rgba(166,81,46,.1);
-    color: var(--rust);
+    border: 1px solid rgba(255,255,255,.2);
+    background: rgba(0,0,0,.25);
+    color: #ffd8d0;
+  }
+  .auth-alert[role="status"]{
+    background: rgba(255,255,255,.15) !important;
+    border-color: rgba(255,255,255,.3) !important;
+    color: #fff !important;
+  }
+  .auth-alert[role="status"] a{
+    color: #81C784 !important;
   }
   .auth-alert svg{ width:18px; height:18px; flex-shrink:0; margin-top:1px; }
   .auth-alert ul{
@@ -132,24 +141,24 @@ unset($_SESSION['auth_errors'], $_SESSION['auth_success'], $_SESSION['auth_verif
     display:block;
     font-size: .8rem;
     font-weight: 600;
-    color: var(--forest);
+    color: #EFE9DA;
     margin-bottom: .35rem;
   }
   .field input{
     width: 100%;
     padding: .65rem .85rem;
-    border: 1.5px solid var(--line);
+    border: 1.5px solid rgba(255,255,255,.2);
     border-radius: 10px;
-    background: var(--cream-2);
+    background: #fff;
     font-family: var(--body);
     font-size: .95rem;
     color: var(--ink);
-    transition: border-color .2s, background .2s;
+    transition: border-color .2s, background .2s, box-shadow .2s;
   }
   .field input:focus{
     outline: none;
     border-color: var(--green);
-    background: #fff;
+    box-shadow: 0 0 0 3px rgba(76,175,80,.35);
   }
 
   .auth-submit{
@@ -163,7 +172,7 @@ unset($_SESSION['auth_errors'], $_SESSION['auth_success'], $_SESSION['auth_verif
     font-weight: 700;
     font-size: .96rem;
     cursor: pointer;
-    box-shadow: 0 6px 16px rgba(76,175,80,.28);
+    box-shadow: 0 6px 16px rgba(0,0,0,.25);
     transition: background .25s, transform .15s;
     margin-top: .4rem;
   }
@@ -173,22 +182,22 @@ unset($_SESSION['auth_errors'], $_SESSION['auth_success'], $_SESSION['auth_verif
     text-align:center;
     margin-top: 1.6rem;
     font-size: .9rem;
-    color: var(--ink-soft);
+    color: #C7D6CB;
   }
   .auth-switch a{
-    color: var(--green-dark);
+    color: #81C784;
     font-weight: 700;
   }
-  .auth-switch a:hover{ text-decoration: underline; }
+  .auth-switch a:hover{ text-decoration: underline; color: #a5d6a7; }
 
   .back-home{
     display:flex;
     justify-content:center;
     margin-top: 1.6rem;
     font-size: .85rem;
-    color: rgba(255,255,255,.8);
+    color: var(--ink-soft);
   }
-  .back-home a:hover{ color: #fff; text-decoration: underline; }
+  .back-home a:hover{ color: var(--forest); }
 
   :focus-visible{ outline: 3px solid var(--ochre); outline-offset: 3px; }
 </style>

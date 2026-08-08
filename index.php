@@ -560,7 +560,181 @@
   }
   .about-list svg{ width:18px; height:18px; color: var(--green-dark); margin-top: .2rem; flex-shrink:0; }
 
-  /* ---- CTA band ---- */
+  /* ---- SIAM 2025 Section ---- */
+  .siam-section {
+    background: #fff;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 5rem 0;
+  }
+  .siam-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 3rem;
+    align-items: center;
+  }
+  .siam-slider-container {
+    position: relative;
+    border-radius: 18px;
+    overflow: hidden;
+    background: var(--cream-2);
+    border: 1px solid var(--line);
+    box-shadow: 0 16px 36px rgba(27,58,43,.12);
+  }
+  .siam-slide-viewport {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/3;
+    overflow: hidden;
+    background: #142A20;
+  }
+  .siam-slide-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
+  }
+  .siam-slide-badge {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    background: rgba(27,58,43,0.85);
+    backdrop-filter: blur(4px);
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    letter-spacing: 0.04em;
+    z-index: 5;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .siam-slide-counter {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(4px);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.3rem 0.65rem;
+    border-radius: 999px;
+    z-index: 5;
+  }
+  .siam-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.9);
+    color: var(--forest);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+    transition: all 0.2s ease;
+    z-index: 6;
+  }
+  .siam-nav-btn:hover {
+    background: #fff;
+    transform: translateY(-50%) scale(1.08);
+    color: var(--green-dark);
+  }
+  .siam-nav-btn.prev { left: 12px; }
+  .siam-nav-btn.next { right: 12px; }
+
+  .siam-thumbnails {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: var(--cream);
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+  .siam-thumb {
+    width: 64px;
+    height: 48px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent;
+    opacity: 0.65;
+    transition: all 0.2s ease;
+  }
+  .siam-thumb:hover { opacity: 0.95; }
+  .siam-thumb.active {
+    border-color: var(--ochre);
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  .siam-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .siam-trophies {
+    display: grid;
+    gap: 0.9rem;
+    margin: 1.3rem 0;
+  }
+  .trophy-card {
+    display: flex;
+    gap: 0.9rem;
+    align-items: flex-start;
+    background: var(--cream);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 0.9rem 1rem;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .trophy-card:hover {
+    transform: translateX(4px);
+    border-color: var(--ochre);
+  }
+  .trophy-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+    flex-shrink: 0;
+    background: rgba(201,144,47,0.12);
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .trophy-info h4 {
+    font-family: var(--display);
+    font-size: 0.95rem;
+    color: var(--forest);
+    margin-bottom: 0.2rem;
+  }
+  .trophy-info p {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    line-height: 1.45;
+  }
+  .siam-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 1.2rem;
+  }
+  .siam-tag {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--forest);
+    background: rgba(76,175,80,0.12);
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+  }
   .cta-band{
     background: linear-gradient(120deg, var(--forest), var(--forest-2));
     color: #fff;
@@ -640,6 +814,7 @@
     .hero-visual{ order:-1; max-width: 420px; margin-inline:auto; }
     .about .container{ grid-template-columns: 1fr; }
     .about-visual{ max-width: 420px; margin-inline:auto; width:100%; }
+    .siam-grid{ grid-template-columns: 1fr; }
     .stats .container{ grid-template-columns: repeat(2,1fr); }
     .products-grid{ grid-template-columns: repeat(2,1fr); }
     .footer-grid{ grid-template-columns: 1fr 1fr; }
@@ -682,6 +857,7 @@
       <a href="#cheptel">Le cheptel</a>
       <a href="#produits">Produits</a>
       <a href="#apropos">À propos</a>
+      <a href="#siam2025">SIAM 2025</a>
       <a href="#contact">Contact</a>
     </nav>
 
@@ -988,6 +1164,84 @@
 
 <div class="fence-divider"></div>
 
+<!-- ================= SIAM 2025 ================= -->
+<section class="siam-section" id="siam2025">
+  <div class="container">
+    <div class="section-head" style="max-width: 820px;">
+      <span class="eyebrow"><span class="dot"></span> 🏆 Distinctions &amp; Événements · SIAM 2025</span>
+      <h2>Fiers de notre réussite au SIAM 2025 — 17ᵉ édition !</h2>
+      <p>JIBAL et sa ferme TARMAST ont brillé lors du Salon International de l’Agriculture au Maroc grâce à des résultats exceptionnels au niveau national.</p>
+    </div>
+
+    <div class="siam-grid">
+      <!-- Diaporama dynamique -->
+      <div class="siam-slider-container" id="siamSlider">
+        <div class="siam-slide-viewport">
+          <span class="siam-slide-badge">SIAM 2025 · 17ᵉ Édition</span>
+          <span class="siam-slide-counter" id="siamCounter">1 / 7</span>
+          <img class="siam-slide-img" id="siamMainImage" src="assets/images/siam/1.png" alt="Participation de la Ferme Tarmast au SIAM 2025">
+          <button class="siam-nav-btn prev" id="siamPrevBtn" aria-label="Photo précédente">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 19l-7-7 7-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="siam-nav-btn next" id="siamNextBtn" aria-label="Photo suivante">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <div class="siam-thumbnails" id="siamThumbs"></div>
+      </div>
+
+      <!-- Contenu et Palmarès -->
+      <div class="siam-content">
+        <h3 style="font-family: var(--display); color: var(--forest); font-size: 1.35rem; margin-bottom: 0.8rem;">Palmarès &amp; Distinctions Majeures</h3>
+        <p style="color: var(--ink-soft); font-size: 0.93rem; line-height: 1.6;">
+          Une reconnaissance au plus haut niveau récompensant le travail d'excellence accompli par nos équipes sur notre cheptel et notre production laitière.
+        </p>
+
+        <div class="siam-trophies">
+          <div class="trophy-card">
+            <div class="trophy-icon">🏆</div>
+            <div class="trophy-info">
+              <h4>1ᵉʳᵉ Place — Champion des Champions au Maroc</h4>
+              <p>Décernée à notre vache <strong>Holstein multipare</strong>, remise officielle par le Ministère de l’Agriculture.</p>
+            </div>
+          </div>
+
+          <div class="trophy-card">
+            <div class="trophy-icon">🥇</div>
+            <div class="trophy-info">
+              <h4>1ᵉʳᵉ &amp; 2ᵉᵐᵉ Places — Génisses Montbéliardes</h4>
+              <p>Double podium national remporté pour nos <strong>génisses Montbéliardes gestantes</strong>.</p>
+            </div>
+          </div>
+
+          <div class="trophy-card">
+            <div class="trophy-icon">🎖️</div>
+            <div class="trophy-info">
+              <h4>Remise du Trophée par le Premier Ministre</h4>
+              <p>Reçu au nom de la ferme TARMAST par Khalid Maataoui lors du dîner royal, avec les félicitations à Mohamed Ouhsaine, à l'équipe SOURCING et à Bouchta Kharbouch.</p>
+            </div>
+          </div>
+        </div>
+
+        <p style="font-size: 0.88rem; color: var(--ink-soft); font-style: italic; border-left: 3px solid var(--ochre); padding-left: 0.8rem; margin-top: 1rem;">
+          « Un grand bravo à toutes les équipes de JIBAL et de TARMAST ainsi qu'à GRUPA POLMLEK pour cette belle performance ! Rendez-vous l’année prochaine pour la 18ᵉ édition ! »
+        </p>
+
+        <div class="siam-tags">
+          <span class="siam-tag">#SIAM2025</span>
+          <span class="siam-tag">#JIBAL</span>
+          <span class="siam-tag">#FERMETARMAST</span>
+          <span class="siam-tag">#HOLSTEIN</span>
+          <span class="siam-tag">#MONTBELIARDES</span>
+          <span class="siam-tag">#SUCCES</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="fence-divider"></div>
+
 <!-- ================= CTA ================= -->
 <section id="cheptel">
   <div class="container">
@@ -1046,11 +1300,93 @@
 <script>
   const toggle = document.querySelector('.nav-toggle');
   const links = document.querySelector('.nav-links');
-  toggle.addEventListener('click', () => {
-    const open = links.style.display === 'flex';
-    links.style.display = open ? 'none' : 'flex';
-    links.style.cssText += open ? '' : 'position:absolute;top:74px;left:0;right:0;background:#FBF6EC;flex-direction:column;padding:1.2rem 6%;border-bottom:1px solid #E3D9C2;gap:1rem;';
-  });
+  if (toggle && links) {
+    toggle.addEventListener('click', () => {
+      const open = links.style.display === 'flex';
+      links.style.display = open ? 'none' : 'flex';
+      links.style.cssText += open ? '' : 'position:absolute;top:74px;left:0;right:0;background:#FBF6EC;flex-direction:column;padding:1.2rem 6%;border-bottom:1px solid #E3D9C2;gap:1rem;';
+    });
+  }
+
+  // SIAM 2025 Dynamic Carousel
+  const siamImages = [
+    'assets/images/siam/1.png',
+    'assets/images/siam/2.png',
+    'assets/images/siam/3.png',
+    'assets/images/siam/4.png',
+    'assets/images/siam/5.png',
+    'assets/images/siam/6.png',
+    'assets/images/siam/7.png'
+  ];
+
+  const siamMainImage = document.getElementById('siamMainImage');
+  const siamCounter = document.getElementById('siamCounter');
+  const siamThumbsContainer = document.getElementById('siamThumbs');
+  const siamPrevBtn = document.getElementById('siamPrevBtn');
+  const siamNextBtn = document.getElementById('siamNextBtn');
+  const siamSlider = document.getElementById('siamSlider');
+
+  if (siamMainImage && siamThumbsContainer && siamPrevBtn && siamNextBtn) {
+    let currentSiamIndex = 0;
+    let siamAutoTimer = null;
+
+    siamImages.forEach((src, idx) => {
+      const thumb = document.createElement('div');
+      thumb.className = `siam-thumb ${idx === 0 ? 'active' : ''}`;
+      thumb.dataset.index = String(idx);
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = `Miniature SIAM 2025 photo ${idx + 1}`;
+      thumb.appendChild(img);
+      thumb.addEventListener('click', () => {
+        currentSiamIndex = idx;
+        updateSiamSlide();
+      });
+      siamThumbsContainer.appendChild(thumb);
+    });
+
+    const updateSiamSlide = () => {
+      siamMainImage.style.opacity = '0';
+      setTimeout(() => {
+        siamMainImage.src = siamImages[currentSiamIndex];
+        siamMainImage.style.opacity = '1';
+      }, 150);
+
+      siamCounter.textContent = `${currentSiamIndex + 1} / ${siamImages.length}`;
+
+      Array.from(siamThumbsContainer.children).forEach((thumb, idx) => {
+        thumb.classList.toggle('active', idx === currentSiamIndex);
+      });
+    };
+
+    const nextSiamSlide = () => {
+      currentSiamIndex = (currentSiamIndex + 1) % siamImages.length;
+      updateSiamSlide();
+    };
+
+    const prevSiamSlide = () => {
+      currentSiamIndex = (currentSiamIndex - 1 + siamImages.length) % siamImages.length;
+      updateSiamSlide();
+    };
+
+    siamNextBtn.addEventListener('click', nextSiamSlide);
+    siamPrevBtn.addEventListener('click', prevSiamSlide);
+
+    const startSiamAutoPlay = () => {
+      siamAutoTimer = setInterval(nextSiamSlide, 4500);
+    };
+
+    const stopSiamAutoPlay = () => {
+      if (siamAutoTimer) clearInterval(siamAutoTimer);
+    };
+
+    if (siamSlider) {
+      siamSlider.addEventListener('mouseenter', stopSiamAutoPlay);
+      siamSlider.addEventListener('mouseleave', startSiamAutoPlay);
+    }
+
+    startSiamAutoPlay();
+  }
 </script>
 
 </body>
