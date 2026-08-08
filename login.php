@@ -39,7 +39,7 @@ unset($_SESSION['auth_errors'], $_SESSION['auth_success'], $_SESSION['auth_verif
 
   body{
     font-family: var(--body);
-    background: var(--cream);
+    background: linear-gradient(135deg, #142A20 0%, #1B3A2B 50%, #142A20 100%);
     color: var(--ink);
     min-height: 100vh;
     display:flex;
@@ -55,8 +55,8 @@ unset($_SESSION['auth_errors'], $_SESSION['auth_success'], $_SESSION['auth_verif
     inset:0;
     z-index: -1;
     background:
-      radial-gradient(600px 300px at 85% 10%, rgba(201,144,47,.14), transparent 70%),
-      radial-gradient(500px 260px at 10% 90%, rgba(76,175,80,.10), transparent 70%);
+      radial-gradient(600px 300px at 85% 10%, rgba(76,175,80,.25), transparent 70%),
+      radial-gradient(500px 260px at 10% 90%, rgba(201,144,47,.18), transparent 70%);
     pointer-events:none;
   }
 
@@ -77,7 +77,7 @@ unset($_SESSION['auth_errors'], $_SESSION['auth_success'], $_SESSION['auth_verif
     font-family: var(--display);
     font-size: 1.35rem;
     font-weight: 700;
-    color: var(--forest);
+    color: #fff;
     margin-bottom: 2rem;
   }
   .brand-mark{ width: 38px; height: 38px; flex-shrink: 0; }
@@ -86,7 +86,7 @@ unset($_SESSION['auth_errors'], $_SESSION['auth_success'], $_SESSION['auth_verif
     background: #fff;
     border: 1px solid var(--line);
     border-radius: 16px;
-    box-shadow: 0 20px 40px rgba(27,58,43,.12);
+    box-shadow: 0 20px 40px rgba(0,0,0,.25);
     padding: 1.9rem 1.8rem 1.7rem;
   }
 
@@ -186,9 +186,9 @@ unset($_SESSION['auth_errors'], $_SESSION['auth_success'], $_SESSION['auth_verif
     justify-content:center;
     margin-top: 1.6rem;
     font-size: .85rem;
-    color: var(--ink-soft);
+    color: rgba(255,255,255,.8);
   }
-  .back-home a:hover{ color: var(--forest); }
+  .back-home a:hover{ color: #fff; text-decoration: underline; }
 
   :focus-visible{ outline: 3px solid var(--ochre); outline-offset: 3px; }
 </style>
