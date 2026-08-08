@@ -6,7 +6,7 @@
 <title>Ferme Tarmast — Le prix se discute, pas s'impose</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="icon" type="image/png" href="assets/images/icon_vache.png">
+<link rel="icon" type="image/png" href="assets/images/iconVache.png">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -872,7 +872,7 @@
   </div>
 </header>
 <!--Banner Ferme Tarmast-->
-<img src="assets/images/banner-ferme-tarmast.jpeg" alt="Banner Ferme Tarmast" style="display:block; width:100%; height:auto; margin:0 0 0.5rem;">
+<img src="assets/images/bannerFermeTarmast.jpeg" alt="Banner Ferme Tarmast" style="display:block; width:100%; height:auto; margin:0 0 0.5rem;">
 <!-- ================= HERO ================= -->
 <section class="hero">
   <div class="container">

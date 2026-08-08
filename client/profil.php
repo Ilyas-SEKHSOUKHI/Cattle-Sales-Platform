@@ -93,7 +93,7 @@ $nb_offres_acceptee = (int) ($stats['acceptees'] ?? 0);
 <title>Mon profil — Ferme Tarmast</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="icon" type="image/png" href="../assets/images/icon_vache.png">
+<link rel="icon" type="image/png" href="../assets/images/iconVache.png">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
