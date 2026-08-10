@@ -8,42 +8,50 @@ requireAdmin();
 $adminNom = $_SESSION['nom'];
 $adminId = (int) $_SESSION['user_id'];
 
-$countStmt = $pdo->prepare("SELECT COUNT(*) FROM vaches WHERE statut = 'disponible' AND id_admin = :id_admin");
-$countStmt->execute([':id_admin' => $adminId]);
-$nbVachesDisponibles = (int) $countStmt->fetchColumn();
+// Assurer la création de la table et la rétro-synchro de toutes les factures
+ensureFacturesTableExists($pdo);
+syncAllFactures($pdo);
 
-$countStmt = $pdo->prepare("SELECT COUNT(*) FROM vaches WHERE statut = 'vendue' AND id_admin = :id_admin");
-$countStmt->execute([':id_admin' => $adminId]);
-$nbVachesVendues = (int) $countStmt->fetchColumn();
+// ---------- Filtres GET ----------
+$search          = trim($_GET['search'] ?? '');
+$filterDateDebut = trim($_GET['date_debut'] ?? '');
+$filterDateFin   = trim($_GET['date_fin'] ?? '');
 
-$countStmt = $pdo->prepare(
-    "SELECT COUNT(*) FROM offres o
-     JOIN vaches v ON o.id_vache = v.id
-     WHERE o.statut = 'en_attente' AND v.id_admin = :id_admin"
-);
-$countStmt->execute([':id_admin' => $adminId]);
-$nbOffresEnAttente = (int) $countStmt->fetchColumn();
+// ---------- Requete SQL Factures ----------
+$sql = "SELECT f.*,
+               u.nom AS acheteur_nom, u.email AS acheteur_email, u.telephone AS acheteur_tel,
+               v.nom AS vache_nom, v.bovin,
+               o.date_reprise
+        FROM factures f
+        JOIN utilisateurs u ON f.id_utilisateur = u.id
+        JOIN vaches v ON f.id_vache = v.id
+        JOIN offres o ON f.id_offre = o.id
+        WHERE v.id_admin = :id_admin";
 
-$sumStmt = $pdo->prepare(
-    "SELECT COALESCE(SUM(o.montant_propose), 0) FROM offres o
-     JOIN vaches v ON o.id_vache = v.id
-     WHERE o.statut = 'acceptee' AND v.id_admin = :id_admin"
-);
-$sumStmt->execute([':id_admin' => $adminId]);
-$revenuTotal = (float) $sumStmt->fetchColumn();
+$params = [':id_admin' => $adminId];
 
-$offresStmt = $pdo->prepare(
-    'SELECT o.id, o.montant_propose AS montant, o.date_offre AS date, o.statut,
-            u.nom AS acheteur, u.email, u.telephone, v.nom AS vache
-     FROM offres o
-     JOIN utilisateurs u ON o.id_utilisateur = u.id
-     JOIN vaches v ON o.id_vache = v.id
-     WHERE v.id_admin = :id_admin
-     ORDER BY o.date_offre DESC
-     LIMIT 8'
-);
-$offresStmt->execute([':id_admin' => $adminId]);
-$offresRecentes = $offresStmt->fetchAll(PDO::FETCH_ASSOC);
+if ($search !== '') {
+    $sql .= " AND (f.numero_facture LIKE :search OR u.nom LIKE :search OR v.nom LIKE :search)";
+    $params[':search'] = '%' . $search . '%';
+}
+if ($filterDateDebut !== '') {
+    $sql .= " AND DATE(f.date_facture) >= :date_debut";
+    $params[':date_debut'] = $filterDateDebut;
+}
+if ($filterDateFin !== '') {
+    $sql .= " AND DATE(f.date_facture) <= :date_fin";
+    $params[':date_fin'] = $filterDateFin;
+}
+
+$sql .= " ORDER BY f.date_facture DESC";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute($params);
+$factures = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$totalFacturesCount = count($factures);
+$totalMontantTTC   = array_sum(array_column($factures, 'montant_ttc'));
+$totalMontantHT    = array_sum(array_column($factures, 'montant_ht'));
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -52,9 +60,9 @@ $offresRecentes = $offresStmt->fetchAll(PDO::FETCH_ASSOC);
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="../assets/images/iconVache.png">
-<title>Tableau de bord — Ferme Tarmast</title>
+<title>Historique des Factures — Ferme Tarmast</title>
 <style>
   :root{
     --forest: #1B3A2B;
@@ -82,7 +90,6 @@ $offresRecentes = $offresStmt->fetchAll(PDO::FETCH_ASSOC);
   }
 
   a{ color:inherit; text-decoration:none; }
-  ul{ list-style:none; }
 
   h1,h2,h3{ font-family: var(--display); color: var(--forest); font-weight:600; }
 
@@ -135,7 +142,7 @@ $offresRecentes = $offresStmt->fetchAll(PDO::FETCH_ASSOC);
     align-items:center;
     gap: .75rem;
     padding: .68rem .8rem;
-    border-radius: 9px;
+    border-radius: 999px;
     font-size: .92rem;
     font-weight: 500;
     color: #C7D6CB;
@@ -192,21 +199,13 @@ $offresRecentes = $offresStmt->fetchAll(PDO::FETCH_ASSOC);
   }
   .topbar h1{ font-size: 1.6rem; }
   .topbar .sub{ color: var(--ink-soft); font-size: .92rem; margin-top:.2rem; }
-  .topbar-date{
-    font-size:.85rem;
-    color: var(--ink-soft);
-    background:#fff;
-    border:1px solid var(--line);
-    padding:.5rem .9rem;
-    border-radius: 999px;
-  }
 
   /* ---------- STAT CARDS ---------- */
   .stats-grid{
     display:grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 1.2rem;
-    margin-bottom: 2.4rem;
+    margin-bottom: 2rem;
   }
   .stat-card{
     background: linear-gradient(135deg, #3f8f42 0%, #173425 100%);
@@ -224,16 +223,65 @@ $offresRecentes = $offresStmt->fetchAll(PDO::FETCH_ASSOC);
     border-radius: 8px;
     display:flex; align-items:center; justify-content:center;
     flex-shrink:0;
+    background: rgba(255,255,255,.22); color: #fff;
   }
   .stat-icon svg{ width:20px; height:20px; }
-  .stat-icon.green{ background: rgba(255,255,255,.22); color: #fff; }
-  .stat-icon.ochre{ background: rgba(255,255,255,.22); color: #fff; }
-  .stat-icon.rust{ background: rgba(255,255,255,.22); color: #fff; }
-  .stat-icon.forest{ background: rgba(255,255,255,.22); color: #fff; }
   .stat-num{ font-family: var(--display); font-size: 1.35rem; font-weight:700; color: #fff; }
   .stat-lbl{ font-size:.78rem; color: #fff; opacity: .95; }
 
-  /* ---------- PANEL / TABLE ---------- */
+  /* ---------- FILTER BAR ---------- */
+  .filter-bar{
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 1.2rem 1.4rem;
+    margin-bottom: 1.4rem;
+    display:flex;
+    align-items:flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .filter-group{
+    display:flex;
+    flex-direction:column;
+    gap:.3rem;
+    flex: 1;
+    min-width: 160px;
+  }
+  .filter-group label{
+    font-size: .76rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--ink-soft);
+    font-weight: 700;
+  }
+  .filter-group input{
+    font-family: var(--body);
+    font-size: .88rem;
+    padding: .55rem .75rem;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--cream);
+    color: var(--ink);
+  }
+  .filter-actions{
+    display:flex;
+    gap: .5rem;
+    align-items:flex-end;
+  }
+  .btn-filter{
+    font-family: var(--body);
+    font-size: .85rem;
+    font-weight: 600;
+    padding: .55rem 1.1rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+  }
+  .btn-filter.primary{ background: var(--green); color: #fff; }
+  .btn-filter.secondary{ background: var(--cream-2); color: var(--ink); border: 1px solid var(--line); }
+
+  /* ---------- PANEL & TABLE ---------- */
   .panel{
     background:#fff;
     border: 1px solid var(--line);
@@ -241,19 +289,11 @@ $offresRecentes = $offresStmt->fetchAll(PDO::FETCH_ASSOC);
     overflow:hidden;
   }
   .panel-head{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
     padding: 1.2rem 1.4rem;
     border-bottom: 1px solid var(--line);
   }
   .panel-head h2{ font-size: 1.05rem; }
-  .panel-head a{
-    font-size: .85rem;
-    font-weight:700;
-    color: var(--green-dark);
-  }
-  .panel-head a:hover{ text-decoration: underline; }
+  .panel-head p{ font-size:.82rem; color: var(--ink-soft); margin-top:.15rem; }
 
   table{ width:100%; border-collapse: collapse; }
   thead th{
@@ -274,73 +314,49 @@ $offresRecentes = $offresStmt->fetchAll(PDO::FETCH_ASSOC);
   }
   tbody tr:hover{ background: rgba(76,175,80,.04); }
 
-  .buyer-cell .name{ font-weight:600; color: var(--forest); }
-  .buyer-cell .contact{
-    font-size:.78rem;
-    color: var(--ink-soft);
-    margin-top:.15rem;
-    display:flex;
-    flex-direction:column;
-    gap:.1rem;
-  }
-  .buyer-cell .contact a{ color: var(--green-dark); font-weight:600; }
-  .buyer-cell .contact a:hover{ text-decoration:underline; }
-
-  .badge{
-    display:inline-flex;
-    align-items:center;
-    gap:.35rem;
-    padding: .28rem .65rem;
-    border-radius: 999px;
-    font-size: .76rem;
+  .num-facture{
+    font-family: var(--display);
     font-weight: 700;
+    color: var(--forest);
+    display: flex;
+    align-items: center;
+    gap: .4rem;
   }
-  .badge.en_attente{ background: rgba(201,144,47,.14); color: var(--ochre); }
-  .badge.acceptee{ background: rgba(76,175,80,.14); color: var(--green-dark); }
-  .badge.refusee{ background: rgba(166,81,46,.12); color: var(--rust); }
+  .num-facture svg{ width: 18px; height: 18px; color: var(--green-dark); }
 
-  .row-actions{ display:flex; gap:.5rem; }
-  .btn-mini{
-    border:none;
-    border-radius: 7px;
-    padding: .4rem .75rem;
-    font-size: .78rem;
-    font-weight:700;
-    cursor:pointer;
-    font-family: var(--body);
+  .badge-payee{
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .25rem .6rem;
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 700;
+    background: rgba(76,175,80,.15);
+    color: var(--green-dark);
+  }
+
+  .btn-action {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .4rem .8rem;
+    border-radius: 6px;
+    font-size: .82rem;
+    font-weight: 600;
+    background: var(--cream-2);
+    color: var(--forest);
+    border: 1px solid var(--line);
     transition: background .18s;
   }
-  .btn-mini.accept{ background: var(--green); color:#fff; }
-  .btn-mini.accept:hover{ background: var(--green-dark); }
-  .btn-mini.refuse{ background: var(--cream-2); color: var(--rust); border:1px solid var(--line); }
-  .btn-mini.refuse:hover{ background: #F3E4DC; }
+  .btn-action:hover { background: #EAE1CB; }
+  .btn-action svg { width: 14px; height: 14px; }
 
   .empty-state{
-    padding: 2.6rem 1.4rem;
+    padding: 3rem 1.4rem;
     text-align:center;
     color: var(--ink-soft);
     font-size: .92rem;
-  }
-
-  /* ---------- RESPONSIVE ---------- */
-  @media (max-width: 980px){
-    .layout{ grid-template-columns: 1fr; }
-    .sidebar{ position: static; height: auto; flex-direction: row; align-items:center; overflow-x:auto; }
-    .sidebar-brand{ border:none; padding:0; margin:0; margin-right: 1.2rem; }
-    .sidebar-label{ display:none; }
-    .sidebar-nav{ flex-direction:row; margin:0; }
-    .sidebar-footer{ margin-left:auto; border:none; padding:0; flex-direction:row; align-items:center; }
-    .sidebar-user{ padding:0; }
-    .stats-grid{ grid-template-columns: repeat(2,1fr); }
-  }
-  @media (max-width: 560px){
-    .main{ padding: 1.6rem 1.1rem 2.4rem; }
-    .stats-grid{ grid-template-columns: 1fr; }
-    thead{ display:none; }
-    table, tbody, tr, td{ display:block; width:100%; }
-    tbody tr{ border-top: 1px solid var(--line); padding: .9rem 1.1rem; }
-    tbody td{ border:none; padding: .25rem 0; }
-    tbody td::before{ content: attr(data-label); display:block; font-size:.72rem; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em; }
   }
 </style>
 </head>
@@ -360,7 +376,7 @@ $offresRecentes = $offresStmt->fetchAll(PDO::FETCH_ASSOC);
 
     <span class="sidebar-label">Gestion</span>
     <nav class="sidebar-nav">
-      <a href="dashboard.php" class="active">
+      <a href="dashboard.php">
         <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="13" y="3" width="8" height="5" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="13" y="12" width="8" height="9" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="15" width="8" height="6" rx="1.5" stroke="currentColor" stroke-width="1.8"/></svg>
         Tableau de bord
       </a>
@@ -380,7 +396,7 @@ $offresRecentes = $offresStmt->fetchAll(PDO::FETCH_ASSOC);
         <svg viewBox="0 0 24 24" fill="none"><path d="M3 3v18h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M7 15l4-4 3 3 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Ventes
       </a>
-      <a href="factures.php">
+      <a href="factures.php" class="active">
         <svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Factures
       </a>
@@ -407,123 +423,118 @@ $offresRecentes = $offresStmt->fetchAll(PDO::FETCH_ASSOC);
   <main class="main">
     <div class="topbar">
       <div>
-        <h1>Bonjour, <?php echo htmlspecialchars($adminNom); ?></h1>
-        <p class="sub">Voici un aperçu de l'activité de Ferme Tarmast.</p>
+        <h1>Historique des Factures</h1>
+        <p class="sub">Consultez, recherchez et imprimez l'ensemble des factures d'achat émises.</p>
       </div>
-      <span class="topbar-date"><?php echo date('d/m/Y'); ?></span>
     </div>
 
     <!-- STATS -->
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-top">
-          <span class="stat-icon green">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/></svg>
+          <span class="stat-icon">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" stroke-width="1.8"/></svg>
           </span>
         </div>
-        <div class="stat-num"><?php echo (int)$nbVachesDisponibles; ?></div>
-        <div class="stat-lbl">Vaches disponibles</div>
+        <div class="stat-num"><?php echo $totalFacturesCount; ?></div>
+        <div class="stat-lbl">Factures émises</div>
       </div>
 
       <div class="stat-card">
         <div class="stat-top">
-          <span class="stat-icon forest">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="stat-icon">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M12 2v20M17 7c0-2.2-2.2-4-5-4s-5 1.8-5 4 2.2 3.2 5 4 5 1.8 5 4-2.2 4-5 4-5-1.8-5-4" stroke="currentColor" stroke-width="1.8"/></svg>
           </span>
         </div>
-        <div class="stat-num"><?php echo (int)$nbVachesVendues; ?></div>
-        <div class="stat-lbl">Vaches vendues</div>
+        <div class="stat-num"><?php echo number_format($totalMontantHT, 2, ',', ' '); ?> DH</div>
+        <div class="stat-lbl">Total HT</div>
       </div>
 
       <div class="stat-card">
         <div class="stat-top">
-          <span class="stat-icon ochre">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M12 8v5l3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/></svg>
+          <span class="stat-icon">
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M8 12h8M12 8v8" stroke="currentColor" stroke-width="1.8"/></svg>
           </span>
         </div>
-        <div class="stat-num"><?php echo (int)$nbOffresEnAttente; ?></div>
-        <div class="stat-lbl">Offres en attente</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-top">
-          <span class="stat-icon rust">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M12 2v20M17 7c0-2.2-2.2-4-5-4s-5 1.8-5 4 2.2 3.2 5 4 5 1.8 5 4-2.2 4-5 4-5-1.8-5-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-          </span>
-        </div>
-        <div class="stat-num"><?php echo number_format((float)$revenuTotal, 0, ',', ' '); ?> DH</div>
-        <div class="stat-lbl">Revenu total (offres acceptées)</div>
+        <div class="stat-num"><?php echo number_format($totalMontantTTC, 2, ',', ' '); ?> DH</div>
+        <div class="stat-lbl">Total TTC encaissement</div>
       </div>
     </div>
 
-    <!-- OFFRES RECENTES -->
+    <!-- FILTRES -->
+    <form class="filter-bar" method="GET" action="factures.php">
+      <div class="filter-group">
+        <label for="search">Rechercher</label>
+        <input type="text" id="search" name="search" placeholder="N° Facture, Acheteur, Bovin..." value="<?php echo htmlspecialchars($search); ?>">
+      </div>
+      <div class="filter-group">
+        <label for="date_debut">Date début</label>
+        <input type="date" id="date_debut" name="date_debut" value="<?php echo htmlspecialchars($filterDateDebut); ?>">
+      </div>
+      <div class="filter-group">
+        <label for="date_fin">Date fin</label>
+        <input type="date" id="date_fin" name="date_fin" value="<?php echo htmlspecialchars($filterDateFin); ?>">
+      </div>
+      <div class="filter-actions">
+        <button type="submit" class="btn-filter primary">Filtrer</button>
+        <a href="factures.php" class="btn-filter secondary">Réinitialiser</a>
+      </div>
+    </form>
+
+    <!-- LISTE FACTURES -->
     <div class="panel">
       <div class="panel-head">
-        <h2>Offres récentes</h2>
-        <a href="offres.php">Voir toutes les offres →</a>
+        <h2>Registre complet des factures</h2>
+        <p>Toutes les factures sont archivées et conservées indéfiniment.</p>
       </div>
 
-      <?php if (!empty($offresRecentes)): ?>
+      <?php if (!empty($factures)): ?>
       <table>
         <thead>
           <tr>
-            <th>Vache</th>
+            <th>N° Facture</th>
             <th>Acheteur</th>
-            <th>Montant proposé</th>
-            <th>Date</th>
+            <th>Produit (Bovin)</th>
+            <th>Montant HT</th>
+            <th>Montant TTC</th>
+            <th>Date Facture</th>
             <th>Statut</th>
-            <th>Actions</th>
+            <th style="text-align:right;">Action</th>
           </tr>
         </thead>
         <tbody>
-          <?php foreach ($offresRecentes as $offre): ?>
+          <?php foreach ($factures as $fact): ?>
           <tr>
-            <td data-label="Vache"><?php echo htmlspecialchars($offre['vache']); ?></td>
-            <td data-label="Acheteur">
-              <div class="buyer-cell">
-                <div class="name"><?php echo htmlspecialchars($offre['acheteur']); ?></div>
-                <div class="contact">
-                  <a href="mailto:<?php echo htmlspecialchars($offre['email']); ?>"><?php echo htmlspecialchars($offre['email']); ?></a>
-                  <?php if (!empty($offre['telephone'])): ?>
-                    <a href="tel:<?php echo htmlspecialchars(telephoneDigits($offre['telephone'])); ?>"><?php echo htmlspecialchars($offre['telephone']); ?></a>
-                  <?php else: ?>
-                    <span>Téléphone non renseigné</span>
-                  <?php endif; ?>
-                </div>
+            <td>
+              <div class="num-facture">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" stroke-width="1.8"/><path d="M14 2v6h6" stroke="currentColor" stroke-width="1.8"/></svg>
+                <?php echo htmlspecialchars($fact['numero_facture']); ?>
               </div>
             </td>
-            <td data-label="Montant"><?php echo number_format((float)$offre['montant'], 0, ',', ' '); ?> DH</td>
-            <td data-label="Date"><?php echo date('d/m/Y H:i', strtotime($offre['date'])); ?></td>
-            <td data-label="Statut">
-              <span class="badge <?php echo $offre['statut']; ?>">
-                <?php
-                  $labels = ['en_attente' => 'En attente', 'acceptee' => 'Acceptée', 'refusee' => 'Refusée'];
-                  echo $labels[$offre['statut']] ?? $offre['statut'];
-                ?>
-              </span>
+            <td>
+              <strong><?php echo htmlspecialchars($fact['acheteur_nom']); ?></strong><br>
+              <span style="font-size:.78rem; color:var(--ink-soft);"><?php echo htmlspecialchars($fact['acheteur_email']); ?></span>
             </td>
-            <td data-label="Actions">
-              <?php if ($offre['statut'] === 'en_attente'): ?>
-              <div class="row-actions">
-                <form action="../actions/accepter_offre.php" method="POST">
-                  <input type="hidden" name="id_offre" value="<?php echo (int)$offre['id']; ?>">
-                  <button type="submit" class="btn-mini accept">Accepter</button>
-                </form>
-                <form action="../actions/refuser_offre.php" method="POST">
-                  <input type="hidden" name="id_offre" value="<?php echo (int)$offre['id']; ?>">
-                  <button type="submit" class="btn-mini refuse">Refuser</button>
-                </form>
-              </div>
-              <?php else: ?>
-              <span style="color:var(--ink-soft); font-size:.85rem;">—</span>
-              <?php endif; ?>
+            <td>
+              <strong><?php echo htmlspecialchars($fact['vache_nom']); ?></strong>
+              <span style="font-size:.78rem; color:var(--ink-soft);">(<?php echo htmlspecialchars(labelBovin($fact['bovin'])); ?>)</span>
+            </td>
+            <td style="font-weight:600; color:var(--ink-soft);"><?php echo number_format((float)$fact['montant_ht'], 2, ',', ' '); ?> DH</td>
+            <td style="font-weight:700; color:var(--green-dark);"><?php echo number_format((float)$fact['montant_ttc'], 2, ',', ' '); ?> DH</td>
+            <td><?php echo date('d/m/Y H:i', strtotime($fact['date_facture'])); ?></td>
+            <td><span class="badge-payee">Payée</span></td>
+            <td style="text-align:right;">
+              <a href="voir_facture.php?id=<?php echo (int)$fact['id']; ?>" class="btn-action">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/></svg>
+                Voir / Imprimer
+              </a>
             </td>
           </tr>
           <?php endforeach; ?>
         </tbody>
       </table>
       <?php else: ?>
-        <div class="empty-state">Aucune offre pour le moment.</div>
+        <div class="empty-state">Aucune facture trouvée.</div>
       <?php endif; ?>
     </div>
 

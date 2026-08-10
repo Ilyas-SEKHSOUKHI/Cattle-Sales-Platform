@@ -68,7 +68,11 @@ try {
     ]);
 
     $pdo->commit();
-    $_SESSION['flash'] = ['type' => 'success', 'message' => 'Offre acceptée. La date de récupération a été enregistrée.'];
+
+    // Auto-génération de la facture permanente
+    generateInvoiceForOffre($pdo, $id_offre);
+
+    $_SESSION['flash'] = ['type' => 'success', 'message' => 'Offre acceptée. La facture a été générée et la date de récupération a été enregistrée.'];
 } catch (PDOException $e) {
     $pdo->rollBack();
     $_SESSION['flash'] = ['type' => 'error', 'message' => 'Impossible d’accepter l’offre pour le moment.'];

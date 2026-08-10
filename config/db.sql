@@ -49,7 +49,24 @@ CREATE TABLE IF NOT EXISTS offres (
     FOREIGN KEY (id_vache) REFERENCES vaches(id)
 );
 
+CREATE TABLE IF NOT EXISTS factures (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    numero_facture VARCHAR(30) UNIQUE NOT NULL,
+    id_offre INT NOT NULL UNIQUE,
+    id_utilisateur INT NOT NULL,
+    id_vache INT NOT NULL,
+    montant_ht DECIMAL(10,2) NOT NULL,
+    montant_ttc DECIMAL(10,2) NOT NULL,
+    tva_taux DECIMAL(5,2) DEFAULT 20.00,
+    date_facture DATETIME DEFAULT CURRENT_TIMESTAMP,
+    statut ENUM('payee', 'annulee') DEFAULT 'payee',
+    FOREIGN KEY (id_offre) REFERENCES offres(id),
+    FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id),
+    FOREIGN KEY (id_vache) REFERENCES vaches(id)
+);
+
 -- Compte admin par défaut : admin@tarmast.ma / admin123
 INSERT INTO utilisateurs (nom, email, mot_de_passe, role)
 SELECT 'Admin Jibal', 'admin@tarmast.ma', '$2y$10$QDy6PTk2w8i2mvcrP9oXxu45sJOEcrryKYrgSu0O4aJ1xpF7YV7Tq', 'admin'
 WHERE NOT EXISTS (SELECT 1 FROM utilisateurs WHERE email = 'admin@tarmast.ma');
+

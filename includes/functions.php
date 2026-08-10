@@ -218,3 +218,168 @@ function ensureColumnExists(PDO $pdo, string $table, string $column, string $def
 
     return tableHasColumn($pdo, $table, $column);
 }
+
+/**
+ * Convertit un montant numérique en toutes lettres en français (Dirhams & Centimes)
+ */
+function nombreEnLettres(float $montant): string
+{
+    if ($montant < 0) {
+        return 'moins ' . nombreEnLettres(abs($montant));
+    }
+
+    $unites = ['', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix', 'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize', 'dix-sept', 'dix-huit', 'dix-neuf'];
+    $dizaines = ['', '', 'vingt', 'trente', 'quarante', 'cinquante', 'soixante', 'soixante-dix', 'quatre-vingt', 'quatre-vingt-dix'];
+
+    $convertChunk = function (int $n) use (&$convertChunk, $unites, $dizaines): string {
+        if ($n === 0) return '';
+        if ($n < 20) return $unites[$n];
+        if ($n < 100) {
+            $d = (int) ($n / 10);
+            $r = $n % 10;
+            if ($d === 7) {
+                return 'soixante' . ($r === 1 ? ' et onze' : '-' . $unites[10 + $r]);
+            }
+            if ($d === 9) {
+                return 'quatre-vingt' . '-' . $unites[10 + $r];
+            }
+            if ($d === 8 && $r === 0) {
+                return 'quatre-vingts';
+            }
+            return $dizaines[$d] . ($r === 1 ? ' et un' : ($r > 0 ? '-' . $unites[$r] : ''));
+        }
+        if ($n < 1000) {
+            $c = (int) ($n / 100);
+            $r = $n % 100;
+            $prefix = ($c === 1) ? 'cent' : $unites[$c] . ' cent';
+            if ($c > 1 && $r === 0) $prefix .= 's';
+            return $prefix . ($r > 0 ? ' ' . $convertChunk($r) : '');
+        }
+        return '';
+    };
+
+    $convertNumber = function (int $num) use ($convertChunk): string {
+        if ($num === 0) return 'zéro';
+        $res = '';
+
+        if ($num >= 1000000) {
+            $m = (int) ($num / 1000000);
+            $num %= 1000000;
+            $res .= ($m === 1 ? 'un million' : $convertChunk($m) . ' millions') . ' ';
+        }
+
+        if ($num >= 1000) {
+            $k = (int) ($num / 1000);
+            $num %= 1000;
+            $res .= ($k === 1 ? 'mille' : $convertChunk($k) . ' mille') . ' ';
+        }
+
+        if ($num > 0) {
+            $res .= $convertChunk($num);
+        }
+
+        return trim($res);
+    };
+
+    $dirhams = (int) floor($montant);
+    $centimes = (int) round(($montant - $dirhams) * 100);
+
+    $strDirhams = $convertNumber($dirhams);
+    $text = ucfirst($strDirhams) . ' ' . ($dirhams <= 1 ? 'Dirham' : 'Dirhams');
+
+    if ($centimes > 0) {
+        $strCentimes = $convertNumber($centimes);
+        $text .= ' et ' . $strCentimes . ' ' . ($centimes <= 1 ? 'Centime' : 'Centimes');
+    }
+
+    return $text;
+}
+
+/**
+ * Assure la création de la table factures si elle n'existe pas
+ */
+function ensureFacturesTableExists(PDO $pdo): void
+{
+    static $created = false;
+    if ($created) return;
+
+    $sql = "CREATE TABLE IF NOT EXISTS factures (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        numero_facture VARCHAR(30) UNIQUE NOT NULL,
+        id_offre INT NOT NULL UNIQUE,
+        id_utilisateur INT NOT NULL,
+        id_vache INT NOT NULL,
+        montant_ht DECIMAL(10,2) NOT NULL,
+        montant_ttc DECIMAL(10,2) NOT NULL,
+        tva_taux DECIMAL(5,2) DEFAULT 20.00,
+        date_facture DATETIME DEFAULT CURRENT_TIMESTAMP,
+        statut ENUM('payee', 'annulee') DEFAULT 'payee',
+        FOREIGN KEY (id_offre) REFERENCES offres(id),
+        FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id),
+        FOREIGN KEY (id_vache) REFERENCES vaches(id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;";
+
+    $pdo->exec($sql);
+    $created = true;
+}
+
+/**
+ * Génère ou récupère une facture pour une offre acceptée
+ */
+function generateInvoiceForOffre(PDO $pdo, int $idOffre): ?array
+{
+    ensureFacturesTableExists($pdo);
+
+    // Vérifier si la facture existe déjà
+    $stmt = $pdo->prepare("SELECT * FROM factures WHERE id_offre = :id_offre");
+    $stmt->execute([':id_offre' => $idOffre]);
+    $facture = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($facture) {
+        return $facture;
+    }
+
+    // Récupérer l'offre acceptée
+    $stmtOffre = $pdo->prepare("SELECT id, montant_propose, id_utilisateur, id_vache, date_offre FROM offres WHERE id = :id AND statut = 'acceptee'");
+    $stmtOffre->execute([':id' => $idOffre]);
+    $offre = $stmtOffre->fetch(PDO::FETCH_ASSOC);
+
+    if (!$offre) {
+        return null;
+    }
+
+    $numFacture = 'FACT-' . date('Y', strtotime($offre['date_offre'] ?? 'now')) . '-' . str_pad((string)$idOffre, 4, '0', STR_PAD_LEFT);
+    $montantTTC = (float) $offre['montant_propose'];
+    $montantHT  = round($montantTTC / 1.20, 2);
+    $dateFacture = $offre['date_offre'] ?? date('Y-m-d H:i:s');
+
+    $insertStmt = $pdo->prepare("INSERT INTO factures (numero_facture, id_offre, id_utilisateur, id_vache, montant_ht, montant_ttc, tva_taux, date_facture, statut) VALUES (:num, :id_offre, :id_user, :id_vache, :ht, :ttc, 20.00, :date_f, 'payee')");
+    $insertStmt->execute([
+        ':num' => $numFacture,
+        ':id_offre' => $idOffre,
+        ':id_user' => $offre['id_utilisateur'],
+        ':id_vache' => $offre['id_vache'],
+        ':ht' => $montantHT,
+        ':ttc' => $montantTTC,
+        ':date_f' => $dateFacture,
+    ]);
+
+    $stmt->execute([':id_offre' => $idOffre]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+/**
+ * Synchronise les factures pour toutes les offres acceptées n'ayant pas encore de facture enregistrée
+ */
+function syncAllFactures(PDO $pdo): void
+{
+    ensureFacturesTableExists($pdo);
+
+    $stmt = $pdo->query("SELECT id FROM offres WHERE statut = 'acceptee' AND id NOT IN (SELECT id_offre FROM factures)");
+    $offres = $stmt ? $stmt->fetchAll(PDO::FETCH_COLUMN) : [];
+
+    foreach ($offres as $idOffre) {
+        generateInvoiceForOffre($pdo, (int)$idOffre);
+    }
+}
+
