@@ -319,31 +319,11 @@ $typeBovinLabel = labelBovin($facture['bovin']);
     color: var(--green-dark);
   }
 
-  /* CACHET ET SIGNATURE */
-  .footer-signatures {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 3rem;
-    padding-top: 2rem;
-    border-top: 1px solid var(--line);
-  }
-  .sig-box {
-    text-align: center;
-    width: 220px;
-  }
-  .sig-box p {
-    font-size: .8rem;
-    font-weight: 600;
-    color: var(--ink-soft);
-    margin-bottom: 3.5rem;
-  }
-  .sig-line {
-    border-bottom: 1px dashed var(--ink-soft);
-  }
-
   .legal-footer {
     text-align: center;
     margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
     font-size: .76rem;
     color: var(--ink-soft);
     line-height: 1.4;
@@ -351,6 +331,10 @@ $typeBovinLabel = labelBovin($facture['bovin']);
 
   /* IMPRESSION CLEAN */
   @media print {
+    @page {
+      size: auto;
+      margin: 10mm 15mm;
+    }
     body {
       background: #fff;
       padding: 0;
@@ -436,19 +420,18 @@ $typeBovinLabel = labelBovin($facture['bovin']);
   <table class="invoice-table">
     <thead>
       <tr>
-        <th>Désignation / Bovin</th>
-        <th class="text-center">Quantité</th>
-        <th class="text-right">Prix HT (DH)</th>
+        <th>DÉSIGNATION</th>
+        <th class="text-center">QUANTITÉ</th>
+        <th class="text-right">PRIX HT</th>
         <th class="text-center">TVA</th>
-        <th class="text-right">Total HT (DH)</th>
-        <th class="text-right">Total TTC (DH)</th>
+        <th class="text-right">MONTANT HT</th>
+        <th class="text-right">MONTANT TTC</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td>
           <div class="item-name"><?php echo htmlspecialchars($facture['vache_nom']); ?></div>
-          <div class="item-desc">Type : <?php echo htmlspecialchars($typeBovinLabel); ?><?php echo !empty($facture['poids']) ? ' • Poids : ' . (float)$facture['poids'] . ' kg' : ''; ?></div>
         </td>
         <td class="text-center">1</td>
         <td class="text-right"><?php echo number_format($montantHT, 2, ',', ' '); ?></td>
@@ -480,18 +463,6 @@ $typeBovinLabel = labelBovin($facture['bovin']);
         <td class="val"><?php echo number_format($montantTTC, 2, ',', ' '); ?> DH</td>
       </tr>
     </table>
-  </div>
-
-  <!-- CACHETS & SIGNATURES -->
-  <div class="footer-signatures">
-    <div class="sig-box">
-      <p>Signature du client</p>
-      <div class="sig-line"></div>
-    </div>
-    <div class="sig-box">
-      <p>Cachet & Signature Administrateur</p>
-      <div class="sig-line"></div>
-    </div>
   </div>
 
   <div class="legal-footer">

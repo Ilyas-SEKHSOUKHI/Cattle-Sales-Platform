@@ -324,6 +324,30 @@ function ensureFacturesTableExists(PDO $pdo): void
 }
 
 /**
+ * Re-numérote de manière strictement séquentielle toutes les factures existantes
+ */
+function resyncSequentialInvoiceNumbers(PDO $pdo): void
+{
+    $stmt = $pdo->query("SELECT id, date_facture FROM factures ORDER BY date_facture ASC, id ASC");
+    $factures = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+
+    $countsByYear = [];
+    $updateStmt = $pdo->prepare("UPDATE factures SET numero_facture = :num WHERE id = :id");
+
+    foreach ($factures as $fact) {
+        $year = date('Y', strtotime($fact['date_facture']));
+        if (!isset($countsByYear[$year])) {
+            $countsByYear[$year] = 1;
+        } else {
+            $countsByYear[$year]++;
+        }
+
+        $numFacture = 'FACT-' . $year . '-' . str_pad((string)$countsByYear[$year], 4, '0', STR_PAD_LEFT);
+        $updateStmt->execute([':num' => $numFacture, ':id' => $fact['id']]);
+    }
+}
+
+/**
  * Génère ou récupère une facture pour une offre acceptée
  */
 function generateInvoiceForOffre(PDO $pdo, int $idOffre): ?array
@@ -348,7 +372,12 @@ function generateInvoiceForOffre(PDO $pdo, int $idOffre): ?array
         return null;
     }
 
-    $numFacture = 'FACT-' . date('Y', strtotime($offre['date_offre'] ?? 'now')) . '-' . str_pad((string)$idOffre, 4, '0', STR_PAD_LEFT);
+    $year = date('Y', strtotime($offre['date_offre'] ?? 'now'));
+    $countStmt = $pdo->prepare("SELECT COUNT(*) FROM factures WHERE numero_facture LIKE :prefix");
+    $countStmt->execute([':prefix' => 'FACT-' . $year . '-%']);
+    $nextSeq = (int)$countStmt->fetchColumn() + 1;
+    $numFacture = 'FACT-' . $year . '-' . str_pad((string)$nextSeq, 4, '0', STR_PAD_LEFT);
+
     $montantTTC = (float) $offre['montant_propose'];
     $montantHT  = round($montantTTC / 1.20, 2);
     $dateFacture = $offre['date_offre'] ?? date('Y-m-d H:i:s');
@@ -375,11 +404,14 @@ function syncAllFactures(PDO $pdo): void
 {
     ensureFacturesTableExists($pdo);
 
-    $stmt = $pdo->query("SELECT id FROM offres WHERE statut = 'acceptee' AND id NOT IN (SELECT id_offre FROM factures)");
+    $stmt = $pdo->query("SELECT id FROM offres WHERE statut = 'acceptee' AND id NOT IN (SELECT id_offre FROM factures) ORDER BY date_offre ASC, id ASC");
     $offres = $stmt ? $stmt->fetchAll(PDO::FETCH_COLUMN) : [];
 
     foreach ($offres as $idOffre) {
         generateInvoiceForOffre($pdo, (int)$idOffre);
     }
+
+    resyncSequentialInvoiceNumbers($pdo);
 }
+
 
