@@ -9,18 +9,17 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
 requireAdmin();
 
 $adminId = (int) $_SESSION['user_id'];
 
-// ---------- Filtres GET (mêmes que ventes.php) ----------
+// ---------- Filtres GET ----------
 $filterDateDebut = trim($_GET['date_debut'] ?? '');
 $filterDateFin   = trim($_GET['date_fin'] ?? '');
 $filterAcheteur  = trim($_GET['acheteur'] ?? '');
 
-// ---------- Construction SQL dynamique ----------
+// ---------- Construction SQL ----------
 $sql = 'SELECT o.id, o.montant_propose AS montant, o.date_offre AS date,
                u.nom AS acheteur, u.email, u.telephone,
                v.nom AS vache
@@ -50,30 +49,55 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $ventes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// ---------- Création du fichier Excel ----------
+// ============================================================
+//  CRÉATION DU FICHIER EXCEL — DESIGN COMPACT & CENTRÉ
+// ============================================================
+
 $spreadsheet = new Spreadsheet();
+$spreadsheet->getProperties()
+    ->setCreator('Ferme Tarmast')
+    ->setTitle('Ventes')
+    ->setDescription('Export des ventes');
+
 $sheet = $spreadsheet->getActiveSheet();
 $sheet->setTitle('Ventes');
 
-// En-têtes
-$headers = ['Nom Vache', 'Acheteur (Nom)', 'Acheteur (Email)', 'Acheteur (Téléphone)', 'Montant HT (DH)', 'Montant TTC (DH)', 'Date', 'Statut'];
-$col = 'A';
-foreach ($headers as $header) {
-    $sheet->setCellValue($col . '1', $header);
-    $col++;
+// ---------- Couleurs ----------
+$colorForest   = '1B3A2B';
+$colorCream    = 'FBF6EC';
+$colorWhite    = 'FFFFFF';
+$colorInk      = '2A2A25';
+$colorLine     = 'E3D9C2';
+$colorGreenDark= '2E7D32';
+
+// ---------- EN-TÊTES (Sans #, orthographe corrigée, sans DH) ----------
+$headers = [
+    'A' => 'Numéro de série',
+    'B' => 'Date',
+    'C' => 'Nom & Prénom',
+    'D' => 'Adresse mail',
+    'E' => 'Téléphone',
+    'F' => 'Produit',
+    'G' => 'Quantité',
+    'H' => 'Montant HT',
+    'I' => 'Montant TTC',
+];
+
+$headerRow = 1;
+foreach ($headers as $col => $label) {
+    $sheet->setCellValue($col . $headerRow, $label);
 }
 
-// Style des en-têtes
-$headerRange = 'A1:H1';
-$sheet->getStyle($headerRange)->applyFromArray([
+// Style En-têtes (compact 9.5pt, vert forêt, centré, texte blanc gras)
+$sheet->getStyle('A1:I1')->applyFromArray([
     'font' => [
         'bold' => true,
-        'color' => ['rgb' => 'FFFFFF'],
-        'size' => 11,
+        'size' => 9.5,
+        'color' => ['rgb' => $colorWhite],
     ],
     'fill' => [
         'fillType' => Fill::FILL_SOLID,
-        'startColor' => ['rgb' => '1B3A2B'],
+        'startColor' => ['rgb' => $colorForest],
     ],
     'alignment' => [
         'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -82,67 +106,105 @@ $sheet->getStyle($headerRange)->applyFromArray([
     'borders' => [
         'allBorders' => [
             'borderStyle' => Border::BORDER_THIN,
-            'color' => ['rgb' => 'CCCCCC'],
+            'color' => ['rgb' => '10231A'],
         ],
     ],
 ]);
+$sheet->getRowDimension(1)->setRowHeight(24);
 
-// Hauteur de la ligne d'en-tête
-$sheet->getRowDimension(1)->setRowHeight(28);
+// ---------- DONNÉES (Ligne 2+) ----------
+$dataStartRow = 2;
+$row = $dataStartRow;
 
-// Données
-$row = 2;
 foreach ($ventes as $vente) {
     $montantTTC = (float) $vente['montant'];
     $montantHT  = $montantTTC / 1.20;
+    $dateFormatted = !empty($vente['date']) ? date('d/m/Y', strtotime($vente['date'])) : '';
 
-    $sheet->setCellValue('A' . $row, $vente['vache']);
-    $sheet->setCellValue('B' . $row, $vente['acheteur']);
-    $sheet->setCellValue('C' . $row, $vente['email']);
-    $sheet->setCellValue('D' . $row, $vente['telephone'] ?? '');
-    $sheet->setCellValue('E' . $row, round($montantHT, 2));
-    $sheet->setCellValue('F' . $row, round($montantTTC, 2));
-    $sheet->setCellValue('G' . $row, date('d/m/Y H:i', strtotime($vente['date'])));
-    $sheet->setCellValue('H' . $row, 'Vendue');
+    $sheet->setCellValue('A' . $row, $vente['id']);
+    $sheet->setCellValue('B' . $row, $dateFormatted);
+    $sheet->setCellValue('C' . $row, $vente['acheteur']);
+    $sheet->setCellValue('D' . $row, $vente['email']);
+    $sheet->setCellValue('E' . $row, !empty($vente['telephone']) ? $vente['telephone'] : '—');
+    $sheet->setCellValue('F' . $row, $vente['vache']);
+    $sheet->setCellValue('G' . $row, 1);
+    $sheet->setCellValue('H' . $row, round($montantHT, 2));
+    $sheet->setCellValue('I' . $row, round($montantTTC, 2));
 
     $row++;
 }
 
-// Format des colonnes numériques
-$lastRow = max($row - 1, 1);
-$sheet->getStyle('E2:F' . $lastRow)->getNumberFormat()->setFormatCode('#,##0.00');
+$lastDataRow = max($row - 1, $dataStartRow);
 
-// Style des données (bordures + alignement)
-if ($lastRow >= 2) {
-    $dataRange = 'A2:H' . $lastRow;
+// ---------- Style des données (Taille 9pt compacte, tout centré) ----------
+if ($lastDataRow >= $dataStartRow) {
+    $dataRange = 'A' . $dataStartRow . ':I' . $lastDataRow;
+
     $sheet->getStyle($dataRange)->applyFromArray([
+        'font' => [
+            'size' => 9,
+            'color' => ['rgb' => $colorInk],
+        ],
+        'alignment' => [
+            'horizontal' => Alignment::HORIZONTAL_CENTER,
+            'vertical' => Alignment::VERTICAL_CENTER,
+        ],
         'borders' => [
             'allBorders' => [
                 'borderStyle' => Border::BORDER_THIN,
-                'color' => ['rgb' => 'E3D9C2'],
+                'color' => ['rgb' => $colorLine],
             ],
-        ],
-        'alignment' => [
-            'vertical' => Alignment::VERTICAL_CENTER,
         ],
     ]);
 
-    // Lignes alternées
-    for ($r = 2; $r <= $lastRow; $r++) {
-        if ($r % 2 === 0) {
-            $sheet->getStyle('A' . $r . ':H' . $r)->getFill()
-                ->setFillType(Fill::FILL_SOLID)
-                ->getStartColor()->setRGB('F9F5EC');
-        }
+    // Fond alterné pour la lisibilité
+    for ($r = $dataStartRow; $r <= $lastDataRow; $r++) {
+        $bgColor = ($r % 2 === 0) ? $colorCream : $colorWhite;
+        $sheet->getStyle('A' . $r . ':I' . $r)->getFill()
+            ->setFillType(Fill::FILL_SOLID)
+            ->getStartColor()->setRGB($bgColor);
+        $sheet->getRowDimension($r)->setRowHeight(19);
     }
+
+    // Format des montants
+    $sheet->getStyle('H' . $dataStartRow . ':I' . $lastDataRow)
+        ->getNumberFormat()
+        ->setFormatCode('#,##0.00');
+
+    // Montants TTC en vert foncé gras
+    $sheet->getStyle('I' . $dataStartRow . ':I' . $lastDataRow)->applyFromArray([
+        'font' => [
+            'bold' => true,
+            'color' => ['rgb' => $colorGreenDark],
+        ],
+    ]);
 }
 
-// Largeur automatique des colonnes
-foreach (range('A', 'H') as $c) {
-    $sheet->getColumnDimension($c)->setAutoSize(true);
+// ---------- Largeurs des colonnes compactes ----------
+$colWidths = [
+    'A' => 14,   // Numéro de série
+    'B' => 12,   // Date
+    'C' => 20,   // Nom & Prénom
+    'D' => 25,   // Adresse mail
+    'E' => 15,   // Téléphone
+    'F' => 18,   // Produit
+    'G' => 10,   // Quantité
+    'H' => 14,   // Montant HT
+    'I' => 14,   // Montant TTC
+];
+foreach ($colWidths as $c => $w) {
+    $sheet->getColumnDimension($c)->setWidth($w);
 }
 
-// ---------- Envoi du fichier ----------
+// ---------- Figer la ligne 1 ----------
+$sheet->freezePane('A2');
+
+// ---------- Filtre automatique sur en-tête ----------
+$sheet->setAutoFilter('A1:I1');
+
+// ============================================================
+//  ENVOI DU FICHIER EXCEL
+// ============================================================
 $filename = 'ventes_ferme_tarmast';
 if ($filterDateDebut) $filename .= '_du_' . $filterDateDebut;
 if ($filterDateFin)   $filename .= '_au_' . $filterDateFin;
