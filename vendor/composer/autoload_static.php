@@ -18,6 +18,10 @@ class ComposerStaticInit9406d2ca35690c71c3314656c85c1386
     );
 
     public static $prefixLengthsPsr4 = array (
+        'Z' =>
+        array (
+            'ZipStream\\' => 10,
+        ),
         'S' =>
         array (
             'Symfony\\Polyfill\\Php83\\' => 23,
@@ -33,10 +37,12 @@ class ComposerStaticInit9406d2ca35690c71c3314656c85c1386
         ),
         'P' =>
         array (
+            'Psr\\SimpleCache\\' => 16,
             'Psr\\Log\\' => 8,
             'Psr\\Http\\Message\\' => 17,
             'Psr\\Http\\Client\\' => 16,
             'Psr\\Container\\' => 14,
+            'PhpOffice\\PhpSpreadsheet\\' => 25,
         ),
         'N' =>
         array (
@@ -44,6 +50,7 @@ class ComposerStaticInit9406d2ca35690c71c3314656c85c1386
         ),
         'M' =>
         array (
+            'Matrix\\' => 7,
             'Mailtrap\\' => 9,
         ),
         'H' =>
@@ -64,11 +71,17 @@ class ComposerStaticInit9406d2ca35690c71c3314656c85c1386
         ),
         'C' =>
         array (
+            'Composer\\Pcre\\' => 14,
+            'Complex\\' => 8,
             'Clue\\StreamFilter\\' => 18,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
+        'ZipStream\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/maennchen/zipstream-php/src',
+        ),
         'Symfony\\Polyfill\\Php83\\' =>
         array (
             0 => __DIR__ . '/..' . '/symfony/polyfill-php83',
@@ -109,6 +122,10 @@ class ComposerStaticInit9406d2ca35690c71c3314656c85c1386
         array (
             0 => __DIR__ . '/..' . '/symfony/http-client',
         ),
+        'Psr\\SimpleCache\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/psr/simple-cache/src',
+        ),
         'Psr\\Log\\' =>
         array (
             0 => __DIR__ . '/..' . '/psr/log/src',
@@ -126,9 +143,17 @@ class ComposerStaticInit9406d2ca35690c71c3314656c85c1386
         array (
             0 => __DIR__ . '/..' . '/psr/container/src',
         ),
+        'PhpOffice\\PhpSpreadsheet\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/phpoffice/phpspreadsheet/src/PhpSpreadsheet',
+        ),
         'Nyholm\\Psr7\\' =>
         array (
             0 => __DIR__ . '/..' . '/nyholm/psr7/src',
+        ),
+        'Matrix\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/markbaker/matrix/classes/src',
         ),
         'Mailtrap\\' =>
         array (
@@ -161,6 +186,14 @@ class ComposerStaticInit9406d2ca35690c71c3314656c85c1386
         'Doctrine\\Common\\Lexer\\' =>
         array (
             0 => __DIR__ . '/..' . '/doctrine/lexer/src',
+        ),
+        'Composer\\Pcre\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/composer/pcre/src',
+        ),
+        'Complex\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/markbaker/complex/classes/src',
         ),
         'Clue\\StreamFilter\\' =>
         array (

@@ -8,21 +8,63 @@ requireAdmin();
 $adminNom = $_SESSION['nom'];
 $adminId = (int) $_SESSION['user_id'];
 
-$ventesStmt = $pdo->prepare(
-    'SELECT o.id, o.montant_propose AS montant, o.date_offre AS date,
-            u.nom AS acheteur, u.email, u.telephone, v.nom AS vache, v.id AS id_vache
-     FROM offres o
-     JOIN utilisateurs u ON o.id_utilisateur = u.id
-     JOIN vaches v ON o.id_vache = v.id
-     WHERE o.statut = \'acceptee\' AND v.id_admin = :id_admin
-     ORDER BY o.date_offre DESC'
-);
-$ventesStmt->execute([':id_admin' => $adminId]);
+// ---------- Filtres GET ----------
+$filterDateDebut = trim($_GET['date_debut'] ?? '');
+$filterDateFin   = trim($_GET['date_fin'] ?? '');
+$filterAcheteur  = trim($_GET['acheteur'] ?? '');
+
+// ---------- Construction SQL dynamique ----------
+$sql = 'SELECT o.id, o.montant_propose AS montant, o.date_offre AS date,
+               u.nom AS acheteur, u.email, u.telephone, u.id AS id_acheteur,
+               v.nom AS vache, v.id AS id_vache
+        FROM offres o
+        JOIN utilisateurs u ON o.id_utilisateur = u.id
+        JOIN vaches v ON o.id_vache = v.id
+        WHERE o.statut = \'acceptee\' AND v.id_admin = :id_admin';
+
+$params = [':id_admin' => $adminId];
+
+if ($filterDateDebut !== '') {
+    $sql .= ' AND DATE(o.date_offre) >= :date_debut';
+    $params[':date_debut'] = $filterDateDebut;
+}
+if ($filterDateFin !== '') {
+    $sql .= ' AND DATE(o.date_offre) <= :date_fin';
+    $params[':date_fin'] = $filterDateFin;
+}
+if ($filterAcheteur !== '') {
+    $sql .= ' AND u.id = :id_acheteur';
+    $params[':id_acheteur'] = (int) $filterAcheteur;
+}
+
+$sql .= ' ORDER BY o.date_offre DESC';
+
+$ventesStmt = $pdo->prepare($sql);
+$ventesStmt->execute($params);
 $ventes = $ventesStmt->fetchAll(PDO::FETCH_ASSOC);
 
 $revenuTotal = array_sum(array_column($ventes, 'montant'));
 $nbVentes = count($ventes);
 $panierMoyen = $nbVentes > 0 ? $revenuTotal / $nbVentes : 0;
+
+// ---------- Liste des acheteurs (pour le filtre) ----------
+$buyersStmt = $pdo->prepare(
+    'SELECT DISTINCT u.id, u.nom
+     FROM utilisateurs u
+     JOIN offres o ON o.id_utilisateur = u.id
+     JOIN vaches v ON o.id_vache = v.id
+     WHERE o.statut = \'acceptee\' AND v.id_admin = :id_admin
+     ORDER BY u.nom ASC'
+);
+$buyersStmt->execute([':id_admin' => $adminId]);
+$acheteurs = $buyersStmt->fetchAll(PDO::FETCH_ASSOC);
+
+// ---------- Construction de la query string pour l'export ----------
+$exportParams = [];
+if ($filterDateDebut !== '') $exportParams['date_debut'] = $filterDateDebut;
+if ($filterDateFin !== '')   $exportParams['date_fin']   = $filterDateFin;
+if ($filterAcheteur !== '')  $exportParams['acheteur']   = $filterAcheteur;
+$exportQuery = http_build_query($exportParams);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -264,6 +306,7 @@ $panierMoyen = $nbVentes > 0 ? $revenuTotal / $nbVentes : 0;
   .buyer-cell .contact a{ color: var(--green-dark); font-weight:600; }
   .buyer-cell .contact a:hover{ text-decoration:underline; }
   .montant{ font-family: var(--display); font-weight:600; font-size: 1rem; color: var(--green-dark); }
+  .montant-ht{ font-family: var(--display); font-weight:600; font-size: .95rem; color: var(--ink-soft); }
 
   .badge{
     display:inline-flex;
@@ -284,6 +327,96 @@ $panierMoyen = $nbVentes > 0 ? $revenuTotal / $nbVentes : 0;
     font-size: .92rem;
   }
 
+  /* ---------- FILTER BAR ---------- */
+  .filter-bar{
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 1.2rem 1.4rem;
+    margin-bottom: 1.4rem;
+    display:flex;
+    align-items:flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .filter-group{
+    display:flex;
+    flex-direction:column;
+    gap:.3rem;
+    flex: 1;
+    min-width: 160px;
+  }
+  .filter-group label{
+    font-size: .76rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--ink-soft);
+    font-weight: 700;
+  }
+  .filter-group input,
+  .filter-group select{
+    font-family: var(--body);
+    font-size: .88rem;
+    padding: .55rem .75rem;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--cream);
+    color: var(--ink);
+    transition: border-color .18s;
+  }
+  .filter-group input:focus,
+  .filter-group select:focus{
+    border-color: var(--green);
+    outline: none;
+  }
+  .filter-actions{
+    display:flex;
+    gap: .5rem;
+    align-items:flex-end;
+    flex-shrink:0;
+  }
+  .btn-filter{
+    font-family: var(--body);
+    font-size: .85rem;
+    font-weight: 600;
+    padding: .55rem 1.1rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: background .18s, transform .1s;
+  }
+  .btn-filter:active{ transform: scale(.97); }
+  .btn-filter.primary{
+    background: var(--green);
+    color: #fff;
+  }
+  .btn-filter.primary:hover{ background: var(--green-dark); }
+  .btn-filter.secondary{
+    background: var(--cream-2);
+    color: var(--ink);
+    border: 1px solid var(--line);
+  }
+  .btn-filter.secondary:hover{ background: #EAE1CB; }
+  .btn-export{
+    display:inline-flex;
+    align-items:center;
+    gap:.45rem;
+    font-family: var(--body);
+    font-size: .85rem;
+    font-weight: 700;
+    padding: .55rem 1.1rem;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--forest);
+    cursor: pointer;
+    text-decoration: none;
+    transition: background .18s, transform .1s;
+  }
+  .btn-export:hover{ background: var(--cream-2); }
+  .btn-export:active{ transform: scale(.97); }
+  .btn-export svg{ width: 16px; height: 16px; flex-shrink:0; }
+
   /* ---------- RESPONSIVE ---------- */
   @media (max-width: 980px){
     .layout{ grid-template-columns: 1fr; }
@@ -294,6 +427,7 @@ $panierMoyen = $nbVentes > 0 ? $revenuTotal / $nbVentes : 0;
     .sidebar-footer{ margin-left:auto; border:none; padding:0; flex-direction:row; align-items:center; }
     .sidebar-user{ padding:0; }
     .stats-grid{ grid-template-columns: repeat(3,1fr); }
+    .filter-bar{ padding: 1rem; }
   }
   @media (max-width: 720px){
     .stats-grid{ grid-template-columns: 1fr 1fr; }
@@ -301,6 +435,8 @@ $panierMoyen = $nbVentes > 0 ? $revenuTotal / $nbVentes : 0;
   @media (max-width: 560px){
     .main{ padding: 1.6rem 1.1rem 2.4rem; }
     .stats-grid{ grid-template-columns: 1fr; }
+    .filter-bar{ flex-direction: column; align-items: stretch; }
+    .filter-group{ min-width: unset; }
     thead{ display:none; }
     table, tbody, tr, td{ display:block; width:100%; }
     tbody tr{ border-top: 1px solid var(--line); padding: .9rem 1.1rem; }
@@ -405,11 +541,54 @@ $panierMoyen = $nbVentes > 0 ? $revenuTotal / $nbVentes : 0;
       </div>
     </div>
 
+    <!-- ================= FILTER BAR ================= -->
+    <form class="filter-bar" method="GET" action="ventes.php" id="filter-form">
+      <div class="filter-group">
+        <label for="date_debut">Date début</label>
+        <input type="date" id="date_debut" name="date_debut" value="<?php echo htmlspecialchars($filterDateDebut); ?>">
+      </div>
+      <div class="filter-group">
+        <label for="date_fin">Date fin</label>
+        <input type="date" id="date_fin" name="date_fin" value="<?php echo htmlspecialchars($filterDateFin); ?>">
+      </div>
+      <div class="filter-group">
+        <label for="acheteur">Acheteur</label>
+        <select id="acheteur" name="acheteur">
+          <option value="">Tous les acheteurs</option>
+          <?php foreach ($acheteurs as $ach): ?>
+            <option value="<?php echo (int)$ach['id']; ?>" <?php echo ($filterAcheteur == $ach['id']) ? 'selected' : ''; ?>>
+              <?php echo htmlspecialchars($ach['nom']); ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="filter-actions">
+        <button type="submit" class="btn-filter primary">Filtrer</button>
+        <a href="ventes.php" class="btn-filter secondary">Réinitialiser</a>
+      </div>
+      <div class="filter-actions">
+        <a href="export_ventes_excel.php<?php echo $exportQuery ? '?' . htmlspecialchars($exportQuery) : ''; ?>" class="btn-export">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2v6h6M8 13h8M8 17h8M8 9h2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Télécharger Excel
+        </a>
+      </div>
+    </form>
+
     <div class="panel">
       <div class="panel-head">
         <div>
           <h2>Historique des ventes</h2>
-          <p>Offres acceptées, du plus récent au plus ancien</p>
+          <p>Offres acceptées, du plus récent au plus ancien<?php
+            $filterInfo = [];
+            if ($filterDateDebut) $filterInfo[] = 'depuis le ' . date('d/m/Y', strtotime($filterDateDebut));
+            if ($filterDateFin) $filterInfo[] = 'jusqu\'au ' . date('d/m/Y', strtotime($filterDateFin));
+            if ($filterAcheteur) {
+              foreach ($acheteurs as $a) {
+                if ($a['id'] == $filterAcheteur) { $filterInfo[] = 'acheteur : ' . htmlspecialchars($a['nom']); break; }
+              }
+            }
+            if ($filterInfo) echo ' — ' . implode(', ', $filterInfo);
+          ?></p>
         </div>
         <a href="offres.php">Voir les offres en attente →</a>
       </div>
@@ -420,13 +599,17 @@ $panierMoyen = $nbVentes > 0 ? $revenuTotal / $nbVentes : 0;
           <tr>
             <th>Vache</th>
             <th>Acheteur</th>
-            <th>Montant</th>
+            <th>Montant HT</th>
+            <th>Montant TTC</th>
             <th>Date</th>
             <th>Statut</th>
           </tr>
         </thead>
         <tbody>
-          <?php foreach ($ventes as $vente): ?>
+          <?php foreach ($ventes as $vente):
+            $montantTTC = (float) $vente['montant'];
+            $montantHT  = $montantTTC / 1.20;
+          ?>
           <tr>
             <td data-label="Vache">
               <div class="vache-cell">
@@ -446,7 +629,8 @@ $panierMoyen = $nbVentes > 0 ? $revenuTotal / $nbVentes : 0;
                 </div>
               </div>
             </td>
-            <td data-label="Montant"><span class="montant"><?php echo number_format((float)$vente['montant'], 0, ',', ' '); ?> DH</span></td>
+            <td data-label="Montant HT"><span class="montant-ht"><?php echo number_format($montantHT, 2, ',', ' '); ?> DH</span></td>
+            <td data-label="Montant TTC"><span class="montant"><?php echo number_format($montantTTC, 2, ',', ' '); ?> DH</span></td>
             <td data-label="Date"><?php echo date('d/m/Y H:i', strtotime($vente['date'])); ?></td>
             <td data-label="Statut"><span class="badge">Vendue</span></td>
           </tr>
