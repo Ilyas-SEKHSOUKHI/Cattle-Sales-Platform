@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/images/banner-github.png" alt="Ferme Tarmast Banner" width="100%" />
+</p>
+
 # 🐄 Ferme Tarmast — Plateforme de vente de bovins
 
 Plateforme web permettant à **Ferme Tarmast**, entreprise laitière, de mettre en vente les bovins de son cheptel. Les acheteurs consultent les annonces et proposent un prix ; l'administrateur accepte ou refuse chaque offre.
