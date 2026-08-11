@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS utilisateurs (
     email VARCHAR(150) UNIQUE NOT NULL,
     telephone VARCHAR(20) NOT NULL,
     mot_de_passe VARCHAR(255) NOT NULL,
+    ice VARCHAR(50) NULL,
     role ENUM('acheteur','admin') DEFAULT 'acheteur',
     email_verified TINYINT(1) NOT NULL DEFAULT 0,
     verification_token VARCHAR(64) NULL,
@@ -16,6 +17,7 @@ CREATE TABLE IF NOT EXISTS utilisateurs (
 
 -- Migration pour bases existantes :
 -- ALTER TABLE utilisateurs ADD COLUMN telephone VARCHAR(20) NOT NULL DEFAULT '' AFTER email;
+-- ALTER TABLE utilisateurs ADD COLUMN ice VARCHAR(50) NULL AFTER telephone;
 
 CREATE TABLE IF NOT EXISTS vaches (
     id INT AUTO_INCREMENT PRIMARY KEY,

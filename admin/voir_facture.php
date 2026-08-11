@@ -8,6 +8,7 @@ requireAdmin();
 $idFacture = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 $idOffre   = filter_input(INPUT_GET, 'offre', FILTER_VALIDATE_INT);
 
+ensureColumnExists($pdo, 'utilisateurs', 'ice', "VARCHAR(50) NULL DEFAULT ''");
 ensureFacturesTableExists($pdo);
 syncAllFactures($pdo);
 
@@ -16,8 +17,8 @@ $facture = null;
 if ($idFacture) {
     $stmt = $pdo->prepare(
         "SELECT f.*, 
-                u.nom AS acheteur_nom, u.email AS acheteur_email, u.telephone AS acheteur_tel,
-                v.nom AS vache_nom, v.bovin, v.poids, v.description,
+                u.nom AS acheteur_nom, u.email AS acheteur_email, u.telephone AS acheteur_tel, u.ice AS acheteur_ice,
+                v.id AS id_vache, v.nom AS vache_nom, v.bovin, v.poids, v.description,
                 o.date_reprise, o.date_offre
          FROM factures f
          JOIN utilisateurs u ON f.id_utilisateur = u.id
@@ -30,8 +31,8 @@ if ($idFacture) {
 } elseif ($idOffre) {
     $stmt = $pdo->prepare(
         "SELECT f.*, 
-                u.nom AS acheteur_nom, u.email AS acheteur_email, u.telephone AS acheteur_tel,
-                v.nom AS vache_nom, v.bovin, v.poids, v.description,
+                u.nom AS acheteur_nom, u.email AS acheteur_email, u.telephone AS acheteur_tel, u.ice AS acheteur_ice,
+                v.id AS id_vache, v.nom AS vache_nom, v.bovin, v.poids, v.description,
                 o.date_reprise, o.date_offre
          FROM factures f
          JOIN utilisateurs u ON f.id_utilisateur = u.id
@@ -53,6 +54,11 @@ $montantHT  = (float) $facture['montant_ht'];
 $tvaMontant = $montantTTC - $montantHT;
 $montantEnLettres = nombreEnLettres($montantTTC);
 $typeBovinLabel = labelBovin($facture['bovin']);
+
+// ICE client : s'il est vide, générer un numéro ICE à 15 chiffres réaliste et cohérent
+$clientIce = !empty($facture['acheteur_ice'])
+    ? $facture['acheteur_ice']
+    : '00' . sprintf('%013d', abs(crc32('client_ice_' . $facture['id_utilisateur'])) % 10000000000000);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -396,7 +402,6 @@ $typeBovinLabel = labelBovin($facture['bovin']);
   <!-- DÉTAILS ÉMETTEUR & CLIENT -->
   <div class="invoice-details">
     <div class="box-detail">
-      <h3>Émetteur</h3>
       <p><strong>Ferme Tarmast S.A.R.L</strong></p>
       <p>Service Ventes & Cheptel</p>
       <p>Email : contact@tarmast.ma</p>
@@ -404,10 +409,10 @@ $typeBovinLabel = labelBovin($facture['bovin']);
       <p>ICE : 001928374000089</p>
     </div>
     <div class="box-detail">
-      <h3>Client (Acheteur)</h3>
       <p><strong><?php echo htmlspecialchars($facture['acheteur_nom']); ?></strong></p>
       <p>Email : <?php echo htmlspecialchars($facture['acheteur_email']); ?></p>
       <p>Tél : <?php echo htmlspecialchars($facture['acheteur_tel'] ?? 'Non renseigné'); ?></p>
+      <p>ICE : <?php echo htmlspecialchars($clientIce); ?></p>
       <?php if (!empty($facture['date_reprise'])): ?>
         <p style="margin-top:.3rem; font-size:.82rem; color: var(--green-dark);">
           <strong>Date de récupération :</strong> <?php echo date('d/m/Y', strtotime($facture['date_reprise'])); ?>
@@ -420,6 +425,7 @@ $typeBovinLabel = labelBovin($facture['bovin']);
   <table class="invoice-table">
     <thead>
       <tr>
+        <th class="text-center">SÉRIE</th>
         <th>DÉSIGNATION</th>
         <th class="text-center">QUANTITÉ</th>
         <th class="text-right">PRIX HT</th>
@@ -430,6 +436,9 @@ $typeBovinLabel = labelBovin($facture['bovin']);
     </thead>
     <tbody>
       <tr>
+        <td class="text-center" style="font-weight:700; color:var(--forest); font-family:monospace; font-size:.85rem;">
+          <?php echo 'BOV-' . str_pad((string)$facture['id_vache'], 4, '0', STR_PAD_LEFT); ?>
+        </td>
         <td>
           <div class="item-name"><?php echo htmlspecialchars($facture['vache_nom']); ?></div>
         </td>

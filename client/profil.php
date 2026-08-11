@@ -13,6 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['modifier_infos'])) {
         $nom = trim(filter_input(INPUT_POST, 'nom', FILTER_SANITIZE_SPECIAL_CHARS) ?: '');
         $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
+        $ice = trim(filter_input(INPUT_POST, 'ice', FILTER_SANITIZE_SPECIAL_CHARS) ?: '');
 
         if ($nom === '' || !$email) {
             $message_erreur = 'Veuillez renseigner un nom et un email valides.';
@@ -23,8 +24,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($check->fetch()) {
                 $message_erreur = 'Cet email est déjà utilisé par un autre compte.';
             } else {
-                $pdo->prepare('UPDATE utilisateurs SET nom = :nom, email = :email WHERE id = :id')
-                    ->execute([':nom' => $nom, ':email' => $email, ':id' => $userId]);
+                ensureColumnExists($pdo, 'utilisateurs', 'ice', "VARCHAR(50) NULL DEFAULT ''");
+                $pdo->prepare('UPDATE utilisateurs SET nom = :nom, email = :email, ice = :ice WHERE id = :id')
+                    ->execute([':nom' => $nom, ':email' => $email, ':ice' => $ice, ':id' => $userId]);
                 $_SESSION['nom'] = $nom;
                 $message_succes = 'Profil mis à jour avec succès.';
             }
@@ -61,7 +63,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$stmt = $pdo->prepare('SELECT id, nom, email, role FROM utilisateurs WHERE id = :id');
+ensureColumnExists($pdo, 'utilisateurs', 'ice', "VARCHAR(50) NULL DEFAULT ''");
+$stmt = $pdo->prepare('SELECT id, nom, email, telephone, ice, role FROM utilisateurs WHERE id = :id');
 $stmt->execute([':id' => $userId]);
 $utilisateur = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -480,6 +483,11 @@ $nb_offres_acceptee = (int) ($stats['acceptees'] ?? 0);
               <div class="field">
                 <label for="email">Adresse email</label>
                 <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($utilisateur['email'] ?? ''); ?>" required>
+              </div>
+              <div class="field full">
+                <label for="ice">Identifiant Commun de l'Entreprise (ICE)</label>
+                <input type="text" id="ice" name="ice" placeholder="Ex: 001928374000089" value="<?php echo htmlspecialchars($utilisateur['ice'] ?? ''); ?>">
+                <span class="hint">Optionnel — Utilisé sur vos factures d'achat.</span>
               </div>
             </div>
           </div>
