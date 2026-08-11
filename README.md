@@ -16,14 +16,14 @@ Projet réalisé dans le cadre d'un stage chez **Jibal**.
 - Inscription avec validation par email
 - Connexion sécurisée (hachage des mots de passe, gestion de session PHP)
 - Consultation des bovins disponibles (vaches, veaux, velles, génisses, bœufs)
-- Détail d'un animal (âge, poids, description, photo)
+- Détail d'un animal (**Calcul précis de l'âge en années, mois et jours** pour les veaux/petits, poids, description, photo)
 - Proposition d'un prix d'achat pour un bovin
 - Suivi de ses offres (en attente / acceptée / refusée)
-- Gestion du profil utilisateur
+- **Gestion du profil utilisateur & ICE** (saisie et modification de son numéro d'Identifiant Commun de l'Entreprise - ICE)
 
 ### ⚙️ Espace administrateur
 - Tableau de bord avec indicateurs clés (revenu total, nombre de ventes, panier moyen, cheptel)
-- Gestion du cheptel : ajout, modification et suppression d'un bovin (avec upload de photos)
+- Gestion du cheptel : ajout, modification et suppression d'un bovin (avec upload de photos et calcul en temps réel de l'âge en ans/mois/jours)
 - Gestion des offres reçues (acceptation ou refus avec traitement automatique des offres concurrentes sur le même animal)
 - **Historique des ventes et filtres multicritères** :
   - Filtrage par période (Date début / Date fin)
@@ -36,10 +36,14 @@ Projet réalisé dans le cadre d'un stage chez **Jibal**.
   - **Historique des factures (`admin/factures.php`)** : recherche et archivage permanent de toutes les factures émises
   - **Facture imprimable/téléchargeable en PDF (`admin/voir_facture.php`)** :
     - Logo officiel `iconVache.png`
-    - Détails émetteur et client acheteur
-    - Tableau de facturation (*DÉSIGNATION, QUANTITÉ, PRIX HT, TVA, MONTANT HT, MONTANT TTC*)
+    - Coordonnées client avec affichage de l'**ICE** (ou génération automatique d'un ICE réaliste à 15 chiffres)
+    - Colonne **SÉRIE** de l'animal (ex: `BOV-0042`)
+    - Tableau de facturation (*SÉRIE, DÉSIGNATION, QUANTITÉ, PRIX HT, TVA, MONTANT HT, MONTANT TTC*)
     - **Montant total en toutes lettres** (ex: *« Deux mille quatre cents Dirhams »*)
     - Styles d'impression épurés (masquage de l'URL/périphérie du navigateur via `@page`)
+  - **Facture Récapitulative (`admin/facture_recapitulative.php`)** :
+    - Regroupement des factures d'un même acheteur sous une seule facture récapitulative
+    - 3 modes de récupération : **Par mois**, **Par année**, ou **Par lot** (sélection manuelle par cases à cocher avec vérification dynamique d'acheteur unique)
 
 ---
 
@@ -67,12 +71,13 @@ Projet réalisé dans le cadre d'un stage chez **Jibal**.
 │   ├── modifier_vache.php    # Formulaire de modification
 │   ├── offres.php            # Gestion des offres d'achat
 │   ├── ventes.php            # Historique des ventes & filtres
-│   ├── factures.php          # Historique et gestion des factures
-│   ├── voir_facture.php      # Facture imprimable / export PDF avec logo & total en lettres
+│   ├── factures.php          # Historique, recherche et sélection par lot des factures
+│   ├── voir_facture.php      # Facture individuelle imprimable / export PDF avec logo & total en lettres
+│   ├── facture_recapitulative.php # Facture récapitulative pour regrouper les achats d'un même client
 │   └── export_ventes_excel.php # Export des ventes sous format Excel (.xlsx)
-├── client/                   # Espace acheteur (accueil, détails, offres, profil)
-├── includes/                 # Fonctions partagées, sessions, helpers (nombreEnLettres, factures...)
-├── config/                   # Connexion base de données, config SMTP, schéma SQL
+├── client/                   # Espace acheteur (accueil, détails, offres, profil avec ICE)
+├── includes/                 # Fonctions partagées, sessions, helpers (nombreEnLettres, vacheAgeFormatted...)
+├── config/                   # Connexion base de données, config SMTP, schéma SQL (champs ice, factures...)
 ├── assets/                   # Images statiques et icônes (iconVache.png, banner-github.png...)
 ├── uploads/                  # Photos des bovins uploadées
 ├── docs/                     # Diagramme de cas d'utilisation, MCD
@@ -154,8 +159,8 @@ Projet réalisé dans le cadre d'un stage chez **Jibal**.
 
 ## 🗄️ Modèle de données
 
-- **utilisateurs** — Comptes acheteurs et administrateurs (rôles, statut de vérification par email).
-- **vaches** — Bovins mis en vente (nom, type de bovin, âge/date de naissance, poids, description, photo, statut *disponible/vendue*).
+- **utilisateurs** — Comptes acheteurs et administrateurs (rôles, statut de vérification par email, téléphone, champ **ICE**).
+- **vaches** — Bovins mis en vente (nom, type de bovin, date de naissance / âge calculé en ans/mois/jours, poids, description, photo, statut *disponible/vendue*).
 - **offres** — Propositions d'achat soumises par les acheteurs (montant, date, statut *en_attente/acceptee/refusee*).
 - **factures** — Factures archivées et numérotées séquentiellement (numéro, offre, acheteur, bovin, montants HT/TTC, date, statut).
 
