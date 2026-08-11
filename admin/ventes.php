@@ -607,7 +607,6 @@ $exportQuery = http_build_query($exportParams);
             <th>Montant TTC</th>
             <th>Date</th>
             <th>Statut</th>
-            <th style="text-align:right;">Facture</th>
           </tr>
         </thead>
         <tbody>
@@ -638,11 +637,6 @@ $exportQuery = http_build_query($exportParams);
             <td data-label="Montant TTC"><span class="montant"><?php echo number_format($montantTTC, 2, ',', ' '); ?> DH</span></td>
             <td data-label="Date"><?php echo date('d/m/Y H:i', strtotime($vente['date'])); ?></td>
             <td data-label="Statut"><span class="badge">Vendue</span></td>
-            <td data-label="Facture" style="text-align:right;">
-              <a href="voir_facture.php?offre=<?php echo (int)$vente['id']; ?>" style="display:inline-flex; align-items:center; gap:.35rem; padding:.35rem .75rem; border-radius:6px; font-size:.8rem; font-weight:600; background:var(--cream-2); border:1px solid var(--line); color:var(--forest);">
-                📄 Voir Facture
-              </a>
-            </td>
           </tr>
           <?php endforeach; ?>
         </tbody>

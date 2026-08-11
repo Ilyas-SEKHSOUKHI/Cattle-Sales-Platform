@@ -16,6 +16,9 @@ syncAllFactures($pdo);
 $search          = trim($_GET['search'] ?? '');
 $filterDateDebut = trim($_GET['date_debut'] ?? '');
 $filterDateFin   = trim($_GET['date_fin'] ?? '');
+$recup           = trim($_GET['recup'] ?? '');
+$recupMois       = trim($_GET['recup_mois'] ?? date('Y-m'));
+$recupAnnee      = trim($_GET['recup_annee'] ?? date('Y'));
 
 // ---------- Requete SQL Factures ----------
 $sql = "SELECT f.*,
@@ -43,6 +46,15 @@ if ($filterDateFin !== '') {
     $params[':date_fin'] = $filterDateFin;
 }
 
+// ---------- Récupération rapide ----------
+if ($recup === 'mois') {
+    $sql .= " AND DATE_FORMAT(f.date_facture, '%Y-%m') = :recup_mois";
+    $params[':recup_mois'] = $recupMois;
+} elseif ($recup === 'annee') {
+    $sql .= " AND YEAR(f.date_facture) = :recup_annee";
+    $params[':recup_annee'] = $recupAnnee;
+}
+
 $sql .= " ORDER BY f.date_facture DESC";
 
 $stmt = $pdo->prepare($sql);
@@ -52,6 +64,20 @@ $factures = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $totalFacturesCount = count($factures);
 $totalMontantTTC   = array_sum(array_column($factures, 'montant_ttc'));
 $totalMontantHT    = array_sum(array_column($factures, 'montant_ht'));
+
+// ---------- Liste des acheteurs ayant des factures ----------
+$buyersStmt = $pdo->prepare(
+    'SELECT DISTINCT u.id, u.nom
+     FROM utilisateurs u
+     JOIN factures f ON f.id_utilisateur = u.id
+     JOIN vaches v ON f.id_vache = v.id
+     WHERE v.id_admin = :id_admin
+     ORDER BY u.nom ASC'
+);
+$buyersStmt->execute([':id_admin' => $adminId]);
+$acheteursList = $buyersStmt->fetchAll(PDO::FETCH_ASSOC);
+
+$filterAcheteur = trim($_GET['acheteur'] ?? '');
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -142,7 +168,7 @@ $totalMontantHT    = array_sum(array_column($factures, 'montant_ht'));
     align-items:center;
     gap: .75rem;
     padding: .68rem .8rem;
-    border-radius: 999px;
+    border-radius: 9px;
     font-size: .92rem;
     font-weight: 500;
     color: #C7D6CB;
@@ -358,6 +384,86 @@ $totalMontantHT    = array_sum(array_column($factures, 'montant_ht'));
     color: var(--ink-soft);
     font-size: .92rem;
   }
+
+  /* ---------- RÉCUPÉRATION ---------- */
+  .recup-section {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 1.2rem 1.4rem;
+    margin-bottom: 1.4rem;
+  }
+  .recup-section h3 {
+    font-size: .92rem;
+    margin-bottom: .8rem;
+  }
+  .recup-tabs {
+    display: flex;
+    gap: .5rem;
+    margin-bottom: 1rem;
+  }
+  .recup-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .5rem 1rem;
+    border-radius: 8px;
+    font-family: var(--body);
+    font-size: .84rem;
+    font-weight: 600;
+    border: 1px solid var(--line);
+    background: var(--cream-2);
+    color: var(--ink);
+    cursor: pointer;
+    text-decoration: none;
+    transition: background .18s, border-color .18s;
+  }
+  .recup-tab:hover {
+    background: #EAE1CB;
+  }
+  .recup-tab.active {
+    background: var(--green);
+    color: #fff;
+    border-color: var(--green);
+  }
+  .recup-tab svg {
+    width: 16px;
+    height: 16px;
+  }
+  .recup-form {
+    display: flex;
+    align-items: flex-end;
+    gap: .8rem;
+    flex-wrap: wrap;
+  }
+  .recup-form label {
+    font-size: .76rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--ink-soft);
+    font-weight: 700;
+  }
+  .recup-form select,
+  .recup-form input[type="month"] {
+    font-family: var(--body);
+    font-size: .88rem;
+    padding: .55rem .75rem;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--cream);
+    color: var(--ink);
+  }
+  .recup-lot-info {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .4rem .8rem;
+    border-radius: 8px;
+    font-size: .82rem;
+    font-weight: 600;
+    background: rgba(76,175,80,.1);
+    color: var(--green-dark);
+  }
 </style>
 </head>
 <body>
@@ -461,6 +567,74 @@ $totalMontantHT    = array_sum(array_column($factures, 'montant_ht'));
       </div>
     </div>
 
+    <!-- RÉCUPÉRATION PAR MOIS / AN / LOT -->
+    <div class="recup-section">
+      <h3>Facture récapitulative</h3>
+      <p style="font-size:.84rem; color:var(--ink-soft); margin-bottom:1rem;">Regroupez plusieurs factures d’un même acheteur dans une seule facture récapitulative.</p>
+      <div class="recup-tabs">
+        <a href="factures.php" class="recup-tab<?php echo $recup === '' ? ' active' : ''; ?>">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M3 12h18M3 6h18M3 18h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          Tout
+        </a>
+        <a href="factures.php?recup=mois&recup_mois=<?php echo urlencode($recupMois); ?>" class="recup-tab<?php echo $recup === 'mois' ? ' active' : ''; ?>">
+          <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          Par mois
+        </a>
+        <a href="factures.php?recup=annee&recup_annee=<?php echo urlencode($recupAnnee); ?>" class="recup-tab<?php echo $recup === 'annee' ? ' active' : ''; ?>">
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Par année
+        </a>
+        <a href="factures.php?recup=lot" class="recup-tab<?php echo $recup === 'lot' ? ' active' : ''; ?>">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" stroke-width="1.8"/><path d="M14 2v6h6" stroke="currentColor" stroke-width="1.8"/></svg>
+          Par lot (sélection manuelle)
+        </a>
+      </div>
+
+      <?php if ($recup === 'mois'): ?>
+        <form class="recup-form" method="GET" action="facture_recapitulative.php">
+          <input type="hidden" name="recup" value="mois">
+          <div class="filter-group">
+            <label for="recup_mois">Mois</label>
+            <input type="month" id="recup_mois" name="recup_mois" value="<?php echo htmlspecialchars($recupMois); ?>">
+          </div>
+          <div class="filter-group">
+            <label for="acheteur_mois">Acheteur</label>
+            <select id="acheteur_mois" name="acheteur" required>
+              <option value="">-- Choisir un acheteur --</option>
+              <?php foreach ($acheteursList as $buyer): ?>
+                <option value="<?php echo (int)$buyer['id']; ?>"<?php echo $filterAcheteur == (string)$buyer['id'] ? ' selected' : ''; ?>><?php echo htmlspecialchars($buyer['nom']); ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <button type="submit" class="btn-filter primary">📄 Générer la facture récapitulative</button>
+        </form>
+      <?php elseif ($recup === 'annee'): ?>
+        <form class="recup-form" method="GET" action="facture_recapitulative.php">
+          <input type="hidden" name="recup" value="annee">
+          <div class="filter-group">
+            <label for="recup_annee">Année</label>
+            <select id="recup_annee" name="recup_annee">
+              <?php for ($y = (int)date('Y'); $y >= 2020; $y--): ?>
+                <option value="<?php echo $y; ?>"<?php echo $recupAnnee == (string)$y ? ' selected' : ''; ?>><?php echo $y; ?></option>
+              <?php endfor; ?>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="acheteur_annee">Acheteur</label>
+            <select id="acheteur_annee" name="acheteur" required>
+              <option value="">-- Choisir un acheteur --</option>
+              <?php foreach ($acheteursList as $buyer): ?>
+                <option value="<?php echo (int)$buyer['id']; ?>"<?php echo $filterAcheteur == (string)$buyer['id'] ? ' selected' : ''; ?>><?php echo htmlspecialchars($buyer['nom']); ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <button type="submit" class="btn-filter primary">📄 Générer la facture récapitulative</button>
+        </form>
+      <?php elseif ($recup === 'lot'): ?>
+        <p style="font-size:.84rem; color:var(--forest); font-weight:600; margin-bottom:.5rem;">Cochez les factures à regrouper dans le tableau ci-dessous, puis cliquez sur « Générer ».</p>
+      <?php endif; ?>
+    </div>
+
     <!-- FILTRES -->
     <form class="filter-bar" method="GET" action="factures.php">
       <div class="filter-group">
@@ -483,15 +657,24 @@ $totalMontantHT    = array_sum(array_column($factures, 'montant_ht'));
 
     <!-- LISTE FACTURES -->
     <div class="panel">
-      <div class="panel-head">
-        <h2>Registre complet des factures</h2>
-        <p>Toutes les factures sont archivées et conservées indéfiniment.</p>
+      <div class="panel-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+        <div>
+          <h2>Registre complet des factures</h2>
+          <p>Toutes les factures sont archivées et conservées indéfiniment.</p>
+        </div>
+        <?php if ($recup === 'lot'): ?>
+          <button type="submit" form="form-lot" class="btn-filter primary">📄 Générer la facture récapitulative des factures cochées</button>
+        <?php endif; ?>
       </div>
 
       <?php if (!empty($factures)): ?>
+      <form id="form-lot" method="GET" action="facture_recapitulative.php">
       <table>
         <thead>
           <tr>
+            <?php if ($recup === 'lot'): ?>
+              <th style="width:40px; text-align:center;"><input type="checkbox" id="check-all" onclick="document.querySelectorAll('.fact-check').forEach(c => c.checked = this.checked)"></th>
+            <?php endif; ?>
             <th>N° Facture</th>
             <th>Acheteur</th>
             <th>Produit (Bovin)</th>
@@ -505,6 +688,9 @@ $totalMontantHT    = array_sum(array_column($factures, 'montant_ht'));
         <tbody>
           <?php foreach ($factures as $fact): ?>
           <tr>
+            <?php if ($recup === 'lot'): ?>
+              <td style="text-align:center;"><input type="checkbox" name="facture_ids[]" value="<?php echo (int)$fact['id']; ?>" data-buyer="<?php echo (int)$fact['id_utilisateur']; ?>" class="fact-check"></td>
+            <?php endif; ?>
             <td>
               <div class="num-facture">
                 <svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" stroke-width="1.8"/><path d="M14 2v6h6" stroke="currentColor" stroke-width="1.8"/></svg>
@@ -533,6 +719,7 @@ $totalMontantHT    = array_sum(array_column($factures, 'montant_ht'));
           <?php endforeach; ?>
         </tbody>
       </table>
+      </form>
       <?php else: ?>
         <div class="empty-state">Aucune facture trouvée.</div>
       <?php endif; ?>
@@ -540,6 +727,62 @@ $totalMontantHT    = array_sum(array_column($factures, 'montant_ht'));
 
   </main>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const checkboxes = document.querySelectorAll('.fact-check');
+  const checkAll = document.getElementById('check-all');
+
+  function updateCheckboxesState() {
+    const checked = Array.from(checkboxes).filter(c => c.checked);
+    if (checked.length === 0) {
+      checkboxes.forEach(c => {
+        c.disabled = false;
+        c.title = "";
+      });
+      if (checkAll) checkAll.disabled = false;
+    } else {
+      const activeBuyer = checked[0].getAttribute('data-buyer');
+      checkboxes.forEach(c => {
+        if (c.getAttribute('data-buyer') !== activeBuyer) {
+          c.checked = false;
+          c.disabled = true;
+          c.title = "Une facture récapitulative ne peut regrouper que les factures d'un seul acheteur.";
+        } else {
+          c.disabled = false;
+          c.title = "";
+        }
+      });
+    }
+  }
+
+  checkboxes.forEach(c => {
+    c.addEventListener('change', updateCheckboxesState);
+  });
+
+  if (checkAll) {
+    checkAll.addEventListener('change', function() {
+      if (this.checked && checkboxes.length > 0) {
+        const firstBuyer = checkboxes[0].getAttribute('data-buyer');
+        checkboxes.forEach(c => {
+          if (c.getAttribute('data-buyer') === firstBuyer) {
+            c.checked = true;
+          } else {
+            c.checked = false;
+            c.disabled = true;
+          }
+        });
+      } else {
+        checkboxes.forEach(c => {
+          c.checked = false;
+          c.disabled = false;
+        });
+      }
+      updateCheckboxesState();
+    });
+  }
+});
+</script>
 
 </body>
 </html>
