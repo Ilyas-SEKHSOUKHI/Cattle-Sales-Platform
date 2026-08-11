@@ -134,10 +134,10 @@ $clientIce = !empty($premier['acheteur_ice'])
 $totalHT = 0;
 $totalTTC = 0;
 foreach ($factures as $f) {
-    $totalHT += (float) $f['montant_ht'];
     $totalTTC += (float) $f['montant_ttc'];
 }
-$tvaTotale = $totalTTC - $totalHT;
+$totalHT = $totalTTC; // TVA 0%
+$tvaTotale = 0;
 $montantEnLettres = nombreEnLettres($totalTTC);
 
 $numFactureRecap = 'RECAP-' . date('Ym') . '-' . str_pad((string)$premier['acheteur_id'], 4, '0', STR_PAD_LEFT);
@@ -486,7 +486,8 @@ $numFactureRecap = 'RECAP-' . date('Ym') . '-' . str_pad((string)$premier['achet
     <thead>
       <tr>
         <th class="text-center">SÉRIE</th>
-        <th>DÉSIGNATION</th>
+        <th>PRODUIT</th>
+        <th>RACE</th>
         <th class="text-center">N° FACTURE</th>
         <th class="text-center">DATE</th>
         <th class="text-right">PRIX HT</th>
@@ -497,13 +498,14 @@ $numFactureRecap = 'RECAP-' . date('Ym') . '-' . str_pad((string)$premier['achet
     </thead>
     <tbody>
       <?php foreach ($factures as $fact): 
-        $ht = (float)$fact['montant_ht'];
         $ttc = (float)$fact['montant_ttc'];
+        $ht = $ttc; // TVA 0%
       ?>
       <tr>
         <td class="text-center" style="font-weight:700; color:var(--forest); font-family:monospace; font-size:.85rem;">
           <?php echo 'BOV-' . str_pad((string)$fact['id_vache'], 4, '0', STR_PAD_LEFT); ?>
         </td>
+        <td><?php echo htmlspecialchars(labelBovin($fact['bovin'])); ?></td>
         <td>
           <div class="item-name"><?php echo htmlspecialchars($fact['vache_nom']); ?></div>
         </td>
@@ -514,7 +516,7 @@ $numFactureRecap = 'RECAP-' . date('Ym') . '-' . str_pad((string)$premier['achet
           <?php echo date('d/m/Y', strtotime($fact['date_facture'])); ?>
         </td>
         <td class="text-right"><?php echo number_format($ht, 2, ',', ' '); ?></td>
-        <td class="text-center">20%</td>
+        <td class="text-center">0%</td>
         <td class="text-right"><?php echo number_format($ht, 2, ',', ' '); ?></td>
         <td class="text-right" style="font-weight:700; color:var(--green-dark);"><?php echo number_format($ttc, 2, ',', ' '); ?></td>
       </tr>
@@ -535,8 +537,8 @@ $numFactureRecap = 'RECAP-' . date('Ym') . '-' . str_pad((string)$premier['achet
         <td class="val"><?php echo number_format($totalHT, 2, ',', ' '); ?> DH</td>
       </tr>
       <tr>
-        <td class="lbl">TVA (20%) :</td>
-        <td class="val"><?php echo number_format($tvaTotale, 2, ',', ' '); ?> DH</td>
+        <td class="lbl">TVA (0%) :</td>
+        <td class="val">0,00 DH</td>
       </tr>
       <tr class="grand-total">
         <td class="lbl">Total TTC :</td>

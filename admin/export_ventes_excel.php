@@ -118,7 +118,7 @@ $row = $dataStartRow;
 
 foreach ($ventes as $vente) {
     $montantTTC = (float) $vente['montant'];
-    $montantHT  = $montantTTC / 1.20;
+    $montantHT  = $montantTTC; // TVA 0%
     $dateFormatted = !empty($vente['date']) ? date('d/m/Y', strtotime($vente['date'])) : '';
 
     $sheet->setCellValue('A' . $row, $vente['id']);

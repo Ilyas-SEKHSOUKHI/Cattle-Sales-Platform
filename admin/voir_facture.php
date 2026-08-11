@@ -50,8 +50,8 @@ if (!$facture) {
 }
 
 $montantTTC = (float) $facture['montant_ttc'];
-$montantHT  = (float) $facture['montant_ht'];
-$tvaMontant = $montantTTC - $montantHT;
+$montantHT  = $montantTTC; // TVA 0%
+$tvaMontant = 0;
 $montantEnLettres = nombreEnLettres($montantTTC);
 $typeBovinLabel = labelBovin($facture['bovin']);
 
@@ -426,7 +426,8 @@ $clientIce = !empty($facture['acheteur_ice'])
     <thead>
       <tr>
         <th class="text-center">SÉRIE</th>
-        <th>DÉSIGNATION</th>
+        <th>PRODUIT</th>
+        <th>RACE</th>
         <th class="text-center">QUANTITÉ</th>
         <th class="text-right">PRIX HT</th>
         <th class="text-center">TVA</th>
@@ -439,12 +440,13 @@ $clientIce = !empty($facture['acheteur_ice'])
         <td class="text-center" style="font-weight:700; color:var(--forest); font-family:monospace; font-size:.85rem;">
           <?php echo 'BOV-' . str_pad((string)$facture['id_vache'], 4, '0', STR_PAD_LEFT); ?>
         </td>
+        <td><?php echo htmlspecialchars($typeBovinLabel); ?></td>
         <td>
           <div class="item-name"><?php echo htmlspecialchars($facture['vache_nom']); ?></div>
         </td>
         <td class="text-center">1</td>
         <td class="text-right"><?php echo number_format($montantHT, 2, ',', ' '); ?></td>
-        <td class="text-center">20%</td>
+        <td class="text-center">0%</td>
         <td class="text-right"><?php echo number_format($montantHT, 2, ',', ' '); ?></td>
         <td class="text-right" style="font-weight:700; color:var(--green-dark);"><?php echo number_format($montantTTC, 2, ',', ' '); ?></td>
       </tr>
@@ -464,8 +466,8 @@ $clientIce = !empty($facture['acheteur_ice'])
         <td class="val"><?php echo number_format($montantHT, 2, ',', ' '); ?> DH</td>
       </tr>
       <tr>
-        <td class="lbl">TVA (20%) :</td>
-        <td class="val"><?php echo number_format($tvaMontant, 2, ',', ' '); ?> DH</td>
+        <td class="lbl">TVA (0%) :</td>
+        <td class="val">0,00 DH</td>
       </tr>
       <tr class="grand-total">
         <td class="lbl">Total TTC :</td>

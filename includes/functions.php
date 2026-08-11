@@ -421,10 +421,10 @@ function generateInvoiceForOffre(PDO $pdo, int $idOffre): ?array
     $numFacture = 'FACT-' . $year . '-' . str_pad((string)$nextSeq, 4, '0', STR_PAD_LEFT);
 
     $montantTTC = (float) $offre['montant_propose'];
-    $montantHT  = round($montantTTC / 1.20, 2);
+    $montantHT  = $montantTTC; // TVA 0%
     $dateFacture = $offre['date_offre'] ?? date('Y-m-d H:i:s');
 
-    $insertStmt = $pdo->prepare("INSERT INTO factures (numero_facture, id_offre, id_utilisateur, id_vache, montant_ht, montant_ttc, tva_taux, date_facture, statut) VALUES (:num, :id_offre, :id_user, :id_vache, :ht, :ttc, 20.00, :date_f, 'payee')");
+    $insertStmt = $pdo->prepare("INSERT INTO factures (numero_facture, id_offre, id_utilisateur, id_vache, montant_ht, montant_ttc, tva_taux, date_facture, statut) VALUES (:num, :id_offre, :id_user, :id_vache, :ht, :ttc, 0.00, :date_f, 'payee')");
     $insertStmt->execute([
         ':num' => $numFacture,
         ':id_offre' => $idOffre,
