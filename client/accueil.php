@@ -414,7 +414,7 @@ $vaches = $stmt->fetchAll(PDO::FETCH_ASSOC);
               <h3><?php echo htmlspecialchars($vache['nom']); ?></h3>
               <p class="cow-meta">
                 <?php echo htmlspecialchars(labelBovin($vache['bovin'] ?? 'vache')); ?> ·
-                <?php echo (int) vacheAge($vache['date_naissance'] ?? null, $vache['age'] !== null ? (int) $vache['age'] : null); ?> ans ·
+                <?php echo htmlspecialchars(vacheAgeFormatted($vache['date_naissance'] ?? null, $vache['age'] !== null ? (int) $vache['age'] : null)); ?> ·
                 <?php echo number_format((float)$vache['poids'], 0, ',', ' '); ?> kg
               </p>
               <?php if (!empty($vache['description'])): ?>

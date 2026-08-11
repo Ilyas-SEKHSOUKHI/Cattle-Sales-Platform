@@ -178,6 +178,48 @@ function vacheAge(?string $dateNaissance, ?int $storedAge = null): ?int
     return $storedAge;
 }
 
+function vacheAgeFormatted(?string $dateNaissance, ?int $storedAge = null): string
+{
+    if (!empty($dateNaissance)) {
+        try {
+            $birth = new DateTime($dateNaissance);
+            $today = new DateTime('today');
+
+            if ($birth <= $today) {
+                $diff = $birth->diff($today);
+                $years  = $diff->y;
+                $months = $diff->m;
+                $days   = $diff->d;
+
+                $parts = [];
+                if ($years > 0) {
+                    $parts[] = $years . ' an' . ($years > 1 ? 's' : '');
+                    if ($months > 0) {
+                        $parts[] = $months . ' mois';
+                    }
+                } elseif ($months > 0) {
+                    $parts[] = $months . ' mois';
+                    if ($days > 0) {
+                        $parts[] = $days . ' jour' . ($days > 1 ? 's' : '');
+                    }
+                } else {
+                    $parts[] = $days . ' jour' . ($days > 1 ? 's' : '');
+                }
+
+                return implode(' ', $parts);
+            }
+        } catch (Exception $e) {
+            // fallback
+        }
+    }
+
+    if ($storedAge !== null && $storedAge >= 0) {
+        return $storedAge . ' an' . ($storedAge > 1 ? 's' : '');
+    }
+
+    return 'Non renseigné';
+}
+
 function deleteVacheImage(?string $imagePath): void
 {
     if ($imagePath === null || $imagePath === '') {

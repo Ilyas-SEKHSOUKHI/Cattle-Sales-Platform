@@ -428,7 +428,7 @@ $vaches = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
               </div>
             </td>
-            <td data-label="Âge"><?php echo (int) vacheAge($v['date_naissance'] ?? null, $v['age'] !== null ? (int) $v['age'] : null); ?> ans</td>
+            <td data-label="Âge"><?php echo htmlspecialchars(vacheAgeFormatted($v['date_naissance'] ?? null, $v['age'] !== null ? (int) $v['age'] : null)); ?></td>
             <td data-label="Poids"><?php echo number_format((float)$v['poids'], 0, ',', ' '); ?> kg</td>
             <td data-label="Statut">
               <span class="badge <?php echo $v['statut']; ?>">

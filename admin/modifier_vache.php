@@ -535,14 +535,37 @@ function updateCalculatedAge() {
     return;
   }
 
-  let age = today.getFullYear() - birth.getFullYear();
-  const monthDiff = today.getMonth() - birth.getMonth();
+  let years = today.getFullYear() - birth.getFullYear();
+  let months = today.getMonth() - birth.getMonth();
+  let days = today.getDate() - birth.getDate();
 
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age--;
+  if (days < 0) {
+    months--;
+    const prevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+    days += prevMonth.getDate();
   }
 
-  output.value = age + ' an' + (age > 1 ? 's' : '');
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+
+  const parts = [];
+  if (years > 0) {
+    parts.push(years + ' an' + (years > 1 ? 's' : ''));
+    if (months > 0) {
+      parts.push(months + ' mois');
+    }
+  } else if (months > 0) {
+    parts.push(months + ' mois');
+    if (days > 0) {
+      parts.push(days + ' jour' + (days > 1 ? 's' : ''));
+    }
+  } else {
+    parts.push(days + ' jour' + (days > 1 ? 's' : ''));
+  }
+
+  output.value = parts.join(' ');
 }
 
 document.getElementById('date_naissance').addEventListener('change', updateCalculatedAge);

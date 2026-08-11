@@ -381,7 +381,7 @@ $offre_existante = $offreStmt->fetch(PDO::FETCH_ASSOC) ?: null;
             <span class="lbl">Bovin</span>
           </div>
           <div class="meta-item">
-            <span class="val"><?php echo (int) vacheAge($vache['date_naissance'] ?? null, $vache['age'] !== null ? (int) $vache['age'] : null); ?> ans</span>
+            <span class="val"><?php echo htmlspecialchars(vacheAgeFormatted($vache['date_naissance'] ?? null, $vache['age'] !== null ? (int) $vache['age'] : null)); ?></span>
             <span class="lbl">Âge</span>
           </div>
           <div class="meta-item">
