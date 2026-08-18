@@ -10,6 +10,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     redirect('../admin/liste_vaches.php');
 }
 
+// Auto-migrate image column to TEXT if needed
+ensureImageColumnIsText($pdo);
+
 $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
 $nom = trim(filter_input(INPUT_POST, 'nom', FILTER_SANITIZE_SPECIAL_CHARS) ?: '');
 $bovin = $_POST['bovin'] ?? 'vache';
@@ -43,16 +46,43 @@ if (!$existing) {
 }
 
 $age = calculateAgeFromBirthDate($dateNaissance);
-$image = $existing['image'];
 
-if (!empty($_FILES['image']['name'])) {
-    $newImage = uploadVacheImage($_FILES['image']);
+// Current images (decode JSON or legacy string)
+$currentImages = getVacheImages($existing['image'] ?? null);
 
-    if ($newImage !== null) {
-        deleteVacheImage($image);
-        $image = $newImage;
+// Handle image deletions (hidden inputs: delete_images[])
+$deleteImages = $_POST['delete_images'] ?? [];
+if (!is_array($deleteImages)) {
+    $deleteImages = [];
+}
+
+$removedImages = [];
+foreach ($deleteImages as $delPath) {
+    $delPath = trim($delPath);
+    if ($delPath !== '' && in_array($delPath, $currentImages, true)) {
+        $removedImages[] = $delPath;
     }
 }
+
+// Remove deleted images from current list
+$currentImages = array_values(array_diff($currentImages, $removedImages));
+
+// Upload new images (respect max 5 total)
+$slotsAvailable = max(0, 5 - count($currentImages));
+$newImages = [];
+
+if ($slotsAvailable > 0 && !empty($_FILES['images']['name']) && is_array($_FILES['images']['name'])) {
+    $newImages = uploadVacheImages($_FILES['images'], $slotsAvailable);
+}
+
+// Merge
+$finalImages = array_merge($currentImages, $newImages);
+
+// Delete removed files from disk
+deleteVacheImages($removedImages);
+
+// Store as JSON (or null if empty)
+$imageJson = !empty($finalImages) ? json_encode(array_values($finalImages), JSON_UNESCAPED_SLASHES) : null;
 
 $stmt = $pdo->prepare(
     'UPDATE vaches
@@ -67,7 +97,7 @@ $stmt->execute([
     ':age' => $age,
     ':poids' => $poids !== false && $poids !== null ? $poids : null,
     ':description' => $description !== '' ? $description : null,
-    ':image' => $image,
+    ':image' => $imageJson,
     ':statut' => $statut,
     ':id' => $id,
     ':id_admin' => (int) $_SESSION['user_id'],

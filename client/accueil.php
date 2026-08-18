@@ -394,7 +394,7 @@ $vaches = $stmt->fetchAll(PDO::FETCH_ASSOC);
           ?>
           <article class="cow-card">
             <div class="cow-photo">
-              <?php if ($imageUrl = vacheImageUrl($vache['image'] ?? null)): ?>
+              <?php if ($imageUrl = vacheFirstImageUrl($vache['image'] ?? null)): ?>
                 <img src="<?php echo htmlspecialchars($imageUrl); ?>" alt="<?php echo htmlspecialchars($vache['nom']); ?>">
               <?php else: ?>
               <svg class="cow-fallback" viewBox="0 0 200 140" fill="none" xmlns="http://www.w3.org/2000/svg">

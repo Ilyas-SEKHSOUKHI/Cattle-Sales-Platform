@@ -10,6 +10,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     redirect('../admin/ajouter_vache.php');
 }
 
+// Auto-migrate image column to TEXT if needed
+ensureImageColumnIsText($pdo);
+
 $nom = trim(filter_input(INPUT_POST, 'nom', FILTER_SANITIZE_SPECIAL_CHARS) ?: '');
 $bovin = $_POST['bovin'] ?? 'vache';
 $dateNaissance = parseDateNaissance(trim($_POST['date_naissance'] ?? ''));
@@ -30,7 +33,10 @@ if (!in_array($statut, ['disponible', 'vendue'], true)) {
 }
 
 $age = calculateAgeFromBirthDate($dateNaissance);
-$image = uploadVacheImage($_FILES['image'] ?? []);
+
+// Upload multiple images (up to 5)
+$images = uploadVacheImages($_FILES['images'] ?? [], 5);
+$imageJson = !empty($images) ? json_encode($images, JSON_UNESCAPED_SLASHES) : null;
 
 $stmt = $pdo->prepare(
     'INSERT INTO vaches (nom, bovin, date_naissance, age, poids, description, image, statut, id_admin)
@@ -44,7 +50,7 @@ $stmt->execute([
     ':age' => $age,
     ':poids' => $poids !== false && $poids !== null ? $poids : null,
     ':description' => $description !== '' ? $description : null,
-    ':image' => $image,
+    ':image' => $imageJson,
     ':statut' => $statut,
     ':id_admin' => (int) $_SESSION['user_id'],
 ]);

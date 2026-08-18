@@ -281,29 +281,65 @@ $adminNom = $_SESSION['nom'];
   .btn-cancel{ background: var(--cream-2); color: var(--ink-soft); border:1px solid var(--line); }
   .btn-cancel:hover{ background: #EADFC4; }
 
-  .image-preview{
-    margin-top: .5rem;
-    border: 1px dashed var(--line);
-    border-radius: 12px;
+  .images-gallery{
+    margin-top:.5rem;
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap:.7rem;
+  }
+  .img-slot{
+    position:relative;
+    aspect-ratio:1;
+    border-radius:12px;
+    overflow:hidden;
     background: var(--cream);
-    min-height: 140px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
+    border:2px dashed var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition: border-color .18s, background .18s, transform .15s;
   }
-  .image-preview img{
-    width: 100%;
-    max-height: 220px;
-    object-fit: cover;
-    display: block;
-  }
-  .image-preview .placeholder{
-    font-size: .82rem;
+  .img-slot:hover{ border-color: var(--green); background: rgba(76,175,80,.04); transform:scale(1.02); }
+  .img-slot.filled{ border-style:solid; border-color:var(--line); cursor:default; }
+  .img-slot.filled:hover{ transform:none; }
+  .img-slot img{ width:100%; height:100%; object-fit:cover; }
+  .img-slot .add-icon{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:.3rem;
     color: var(--ink-soft);
-    padding: 1rem;
-    text-align: center;
+    pointer-events:none;
   }
+  .img-slot .add-icon svg{ width:24px; height:24px; opacity:.5; }
+  .img-slot .add-icon span{ font-size:.72rem; font-weight:600; }
+  .img-remove{
+    position:absolute;
+    top:4px; right:4px;
+    width:24px; height:24px;
+    border-radius:50%;
+    background:rgba(0,0,0,.55);
+    backdrop-filter:blur(4px);
+    border:none;
+    color:#fff;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    opacity:0;
+    transition: opacity .15s, background .15s;
+  }
+  .img-slot.filled:hover .img-remove{ opacity:1; }
+  .img-remove:hover{ background:rgba(166,81,46,.85); }
+  .img-remove svg{ width:14px; height:14px; }
+  .img-counter{
+    margin-top:.4rem;
+    font-size:.78rem;
+    font-weight:600;
+    color: var(--ink-soft);
+  }
+  .img-counter b{ color: var(--forest); }
 
   /* ---------- RESPONSIVE ---------- */
   @media (max-width: 980px){
@@ -447,11 +483,17 @@ $adminNom = $_SESSION['nom'];
               </select>
             </div>
             <div class="form-group full">
-              <label for="image">Photo de l'animal</label>
-              <input type="file" id="image" name="image" accept="image/jpeg,image/png,image/webp,image/gif">
-              <div class="image-preview" id="imagePreview">
-                <span class="placeholder">Aucune photo sélectionnée</span>
+              <label>Photos de l'animal <span class="hint" style="display:inline;">(jusqu'à 5 images)</span></label>
+              <input type="file" id="imagesInput" name="images[]" accept="image/jpeg,image/png,image/webp,image/gif" multiple style="display:none;">
+              <div class="images-gallery" id="imagesGallery">
+                <div class="img-slot add-slot" id="addSlot" title="Ajouter une photo">
+                  <div class="add-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
+                    <span>Ajouter</span>
+                  </div>
+                </div>
               </div>
+              <div class="img-counter"><b id="imgCount">0</b> / 5 photos</div>
               <span class="hint">Formats acceptés : JPG, PNG, WEBP, GIF (optionnel).</span>
             </div>
             <div class="form-group full">
@@ -476,22 +518,86 @@ $adminNom = $_SESSION['nom'];
 </div>
 
 <script>
-document.getElementById('image').addEventListener('change', function () {
-  const preview = document.getElementById('imagePreview');
-  const file = this.files && this.files[0];
+// ===== Multi-image upload manager =====
+const MAX_IMAGES = 5;
+let selectedFiles = []; // { file, previewUrl }
 
-  if (!file) {
-    preview.innerHTML = '<span class="placeholder">Aucune photo sélectionnée</span>';
-    return;
-  }
+const gallery = document.getElementById('imagesGallery');
+const addSlot = document.getElementById('addSlot');
+const fileInput = document.getElementById('imagesInput');
+const imgCount = document.getElementById('imgCount');
 
-  const reader = new FileReader();
-  reader.onload = function (event) {
-    preview.innerHTML = '<img src="' + event.target.result + '" alt="Aperçu de la photo">';
-  };
-  reader.readAsDataURL(file);
+function renderGallery() {
+  // Remove all filled slots
+  gallery.querySelectorAll('.img-slot.filled').forEach(el => el.remove());
+
+  selectedFiles.forEach((item, index) => {
+    const slot = document.createElement('div');
+    slot.className = 'img-slot filled';
+    slot.innerHTML = '<img src="' + item.previewUrl + '" alt="Photo ' + (index + 1) + '">' +
+      '<button type="button" class="img-remove" data-index="' + index + '" title="Supprimer">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>';
+    gallery.insertBefore(slot, addSlot);
+  });
+
+  // Show/hide add slot
+  addSlot.style.display = selectedFiles.length >= MAX_IMAGES ? 'none' : 'flex';
+  imgCount.textContent = selectedFiles.length;
+
+  // Rebuild the real file input with a DataTransfer
+  rebuildFileInput();
+}
+
+function rebuildFileInput() {
+  const dt = new DataTransfer();
+  selectedFiles.forEach(item => dt.items.add(item.file));
+  fileInput.files = dt.files;
+}
+
+addSlot.addEventListener('click', () => {
+  if (selectedFiles.length >= MAX_IMAGES) return;
+  fileInput.click();
 });
 
+fileInput.addEventListener('change', () => {
+  const files = Array.from(fileInput.files);
+  const slotsLeft = MAX_IMAGES - selectedFiles.length;
+  const toAdd = files.slice(0, slotsLeft);
+
+  toAdd.forEach(file => {
+    const url = URL.createObjectURL(file);
+    selectedFiles.push({ file, previewUrl: url });
+  });
+
+  renderGallery();
+});
+
+gallery.addEventListener('click', (e) => {
+  const removeBtn = e.target.closest('.img-remove');
+  if (!removeBtn) return;
+  const index = parseInt(removeBtn.dataset.index, 10);
+  if (!isNaN(index) && index >= 0 && index < selectedFiles.length) {
+    URL.revokeObjectURL(selectedFiles[index].previewUrl);
+    selectedFiles.splice(index, 1);
+    renderGallery();
+  }
+});
+
+// Drag & drop on the add slot
+addSlot.addEventListener('dragover', (e) => { e.preventDefault(); addSlot.style.borderColor = 'var(--green)'; });
+addSlot.addEventListener('dragleave', () => { addSlot.style.borderColor = ''; });
+addSlot.addEventListener('drop', (e) => {
+  e.preventDefault();
+  addSlot.style.borderColor = '';
+  const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+  const slotsLeft = MAX_IMAGES - selectedFiles.length;
+  files.slice(0, slotsLeft).forEach(file => {
+    selectedFiles.push({ file, previewUrl: URL.createObjectURL(file) });
+  });
+  renderGallery();
+});
+
+// ===== Age calculator =====
 function updateCalculatedAge() {
   const input = document.getElementById('date_naissance');
   const output = document.getElementById('age_calcule');

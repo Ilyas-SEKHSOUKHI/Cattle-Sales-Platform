@@ -125,6 +125,112 @@ function vacheImageUrl(?string $imagePath): ?string
     return '../' . ltrim($imagePath, '/');
 }
 
+/**
+ * Upload multiple cow images (up to $max files).
+ * Expects the $_FILES['images'] array (multi-file format).
+ * Returns an array of relative paths.
+ */
+function uploadVacheImages(array $filesRaw, int $max = 5): array
+{
+    $paths = [];
+
+    if (empty($filesRaw['name']) || !is_array($filesRaw['name'])) {
+        return $paths;
+    }
+
+    $count = min(count($filesRaw['name']), $max);
+
+    for ($i = 0; $i < $count; $i++) {
+        $singleFile = [
+            'name'     => $filesRaw['name'][$i] ?? '',
+            'type'     => $filesRaw['type'][$i] ?? '',
+            'tmp_name' => $filesRaw['tmp_name'][$i] ?? '',
+            'error'    => $filesRaw['error'][$i] ?? UPLOAD_ERR_NO_FILE,
+            'size'     => $filesRaw['size'][$i] ?? 0,
+        ];
+
+        $result = uploadVacheImage($singleFile);
+
+        if ($result !== null) {
+            $paths[] = $result;
+        }
+    }
+
+    return $paths;
+}
+
+/**
+ * Decode the image column value (JSON array or legacy single string) into an array of relative paths.
+ */
+function getVacheImages(?string $imageField): array
+{
+    if ($imageField === null || $imageField === '') {
+        return [];
+    }
+
+    // Try JSON decode first
+    if ($imageField[0] === '[') {
+        $decoded = json_decode($imageField, true);
+        if (is_array($decoded)) {
+            return array_values(array_filter($decoded, fn($v) => is_string($v) && $v !== ''));
+        }
+    }
+
+    // Legacy: single string path
+    return [$imageField];
+}
+
+/**
+ * Get the first image URL for thumbnails. Returns a web-relative URL (../uploads/...) or null.
+ */
+function getVacheFirstImage(?string $imageField): ?string
+{
+    $images = getVacheImages($imageField);
+    return !empty($images) ? $images[0] : null;
+}
+
+/**
+ * Get the first image URL ready for <img src>. Wrapper around vacheImageUrl + getVacheFirstImage.
+ */
+function vacheFirstImageUrl(?string $imageField): ?string
+{
+    $first = getVacheFirstImage($imageField);
+    return $first !== null ? vacheImageUrl($first) : null;
+}
+
+/**
+ * Delete multiple cow image files from disk.
+ */
+function deleteVacheImages(array $paths): void
+{
+    foreach ($paths as $path) {
+        deleteVacheImage($path);
+    }
+}
+
+/**
+ * Ensure the vaches.image column is TEXT (not VARCHAR) to support JSON arrays.
+ * Called once on relevant pages.
+ */
+function ensureImageColumnIsText(PDO $pdo): void
+{
+    static $done = false;
+    if ($done) return;
+
+    try {
+        $stmt = $pdo->query("SHOW COLUMNS FROM vaches WHERE Field = 'image'");
+        $col = $stmt ? $stmt->fetch(PDO::FETCH_ASSOC) : null;
+
+        if ($col && stripos($col['Type'], 'text') === false) {
+            $pdo->exec("ALTER TABLE vaches MODIFY COLUMN image TEXT NULL");
+        }
+    } catch (Exception $e) {
+        // Silently ignore if already TEXT or table doesn't exist yet
+    }
+
+    $done = true;
+}
+
 function telephoneDigits(?string $telephone): string
 {
     return preg_replace('/\D/', '', $telephone ?? '');

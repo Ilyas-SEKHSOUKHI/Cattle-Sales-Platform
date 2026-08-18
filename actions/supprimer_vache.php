@@ -28,7 +28,7 @@ if (!$vache) {
     redirect('../admin/liste_vaches.php');
 }
 
-deleteVacheImage($vache['image'] ?? null);
+deleteVacheImages(getVacheImages($vache['image'] ?? null));
 
 $pdo->prepare('DELETE FROM offres WHERE id_vache = :id')->execute([':id' => $id]);
 $pdo->prepare('DELETE FROM vaches WHERE id = :id AND id_admin = :id_admin')->execute([

@@ -639,7 +639,7 @@ $offresRecentes = $offresStmt->fetchAll(PDO::FETCH_ASSOC);
                   data-vache-age="<?php echo htmlspecialchars(vacheAgeFormatted($offre['date_naissance'] ?? null, $offre['vache_age'] !== null ? (int)$offre['vache_age'] : null)); ?>"
                   data-vache-poids="<?php echo number_format((float)($offre['poids'] ?? 0), 0, ',', ' '); ?>"
                   data-vache-desc="<?php echo htmlspecialchars($offre['vache_description'] ?? ''); ?>"
-                  data-vache-img="<?php echo htmlspecialchars(vacheImageUrl($offre['vache_image'] ?? null) ?? ''); ?>"
+                  data-vache-img="<?php echo htmlspecialchars(vacheFirstImageUrl($offre['vache_image'] ?? null) ?? ''); ?>"
                   data-vache-statut="<?php echo htmlspecialchars($offre['vache_statut'] ?? 'disponible'); ?>"
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>

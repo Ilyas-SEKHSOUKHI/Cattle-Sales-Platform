@@ -183,6 +183,48 @@ $offre_existante = $offreStmt->fetch(PDO::FETCH_ASSOC) ?: null;
     padding: .4rem .8rem; border-radius: 8px;
     backdrop-filter: blur(3px);
   }
+  /* Carousel nav arrows */
+  .carousel-arrow{
+    position:absolute; top:50%; z-index:3;
+    width:36px; height:36px;
+    border-radius:50%;
+    background:rgba(0,0,0,.35);
+    backdrop-filter:blur(4px);
+    border:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    color:#fff;
+    transition: background .18s, transform .15s;
+    transform: translateY(-50%);
+  }
+  .carousel-arrow:hover{ background:rgba(0,0,0,.55); }
+  .carousel-arrow svg{ width:18px; height:18px; }
+  .carousel-arrow.prev{ left:12px; }
+  .carousel-arrow.next{ right:12px; }
+  .carousel-counter{
+    position:absolute; bottom:18px; right:18px; z-index:2;
+    font-size:.74rem; font-weight:700; color:#fff;
+    background:rgba(20,42,32,.55);
+    padding:.3rem .7rem;
+    border-radius:8px;
+    backdrop-filter:blur(3px);
+  }
+  .media-thumbs{
+    display:flex;
+    gap:.45rem;
+    margin-top:.6rem;
+  }
+  .media-thumb{
+    width:56px; height:56px;
+    border-radius:8px;
+    overflow:hidden;
+    border:2px solid transparent;
+    cursor:pointer;
+    opacity:.6;
+    transition: opacity .18s, border-color .18s;
+  }
+  .media-thumb.active{ border-color: var(--green); opacity:1; }
+  .media-thumb:hover{ opacity:1; }
+  .media-thumb img{ width:100%; height:100%; object-fit:cover; }
 
   /* ---------- INFO ---------- */
   .info-eyebrow{
@@ -343,14 +385,18 @@ $offre_existante = $offreStmt->fetch(PDO::FETCH_ASSOC) ?: null;
 
       <!-- ================= MEDIA ================= -->
       <div>
-        <div class="media-card">
-          <?php $statut = $vache['statut'] ?? 'disponible'; ?>
+        <?php
+          $statut = $vache['statut'] ?? 'disponible';
+          $allImages = getVacheImages($vache['image'] ?? null);
+          $hasMultiple = count($allImages) > 1;
+        ?>
+        <div class="media-card" id="mediaCard">
           <span class="media-tag statut-<?php echo htmlspecialchars($statut); ?>">
             <?php echo $statut === 'vendue' ? 'Vendue' : 'Disponible'; ?>
           </span>
           <span class="media-ref">Fiche N°<?php echo (int)$vache['id']; ?></span>
-          <?php if ($imageUrl = vacheImageUrl($vache['image'] ?? null)): ?>
-            <img src="<?php echo htmlspecialchars($imageUrl); ?>" alt="<?php echo htmlspecialchars($vache['nom']); ?>">
+          <?php if (!empty($allImages)): ?>
+            <img id="mainImage" src="<?php echo htmlspecialchars(vacheImageUrl($allImages[0])); ?>" alt="<?php echo htmlspecialchars($vache['nom']); ?>">
           <?php else: ?>
           <svg class="cow-fallback" viewBox="0 0 200 140" fill="none" xmlns="http://www.w3.org/2000/svg">
             <ellipse cx="100" cy="90" rx="70" ry="34" fill="#F2EAD8"/>
@@ -362,7 +408,26 @@ $offre_existante = $offreStmt->fetch(PDO::FETCH_ASSOC) ?: null;
             <path d="M40 118l0 14M70 122l0 14M110 122l0 14M140 118l0 14" stroke="#1B3A2B" stroke-width="6" stroke-linecap="round"/>
           </svg>
           <?php endif; ?>
+          <?php if ($hasMultiple): ?>
+            <button type="button" class="carousel-arrow prev" id="carouselPrev">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <button type="button" class="carousel-arrow next" id="carouselNext">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+            <span class="carousel-counter" id="carouselCounter">1 / <?php echo count($allImages); ?></span>
+          <?php endif; ?>
         </div>
+
+        <?php if ($hasMultiple): ?>
+        <div class="media-thumbs" id="mediaThumbs">
+          <?php foreach ($allImages as $idx => $imgPath): ?>
+            <div class="media-thumb <?php echo $idx === 0 ? 'active' : ''; ?>" data-index="<?php echo $idx; ?>">
+              <img src="<?php echo htmlspecialchars(vacheImageUrl($imgPath)); ?>" alt="Photo <?php echo $idx + 1; ?>">
+            </div>
+          <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
 
         <a href="accueil.php" class="back-link">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
@@ -463,6 +528,26 @@ $offre_existante = $offreStmt->fetch(PDO::FETCH_ASSOC) ?: null;
     links.style.display = open ? 'none' : 'flex';
     links.style.cssText += open ? '' : 'position:absolute;top:74px;left:0;right:0;background:#FBF6EC;flex-direction:column;padding:1.2rem 6%;border-bottom:1px solid #E3D9C2;gap:1rem;';
   });
+
+  // ===== Image Carousel =====
+  <?php if ($hasMultiple): ?>
+  const carouselImages = <?php echo json_encode(array_map(fn($p) => vacheImageUrl($p), $allImages)); ?>;
+  let currentSlide = 0;
+  const mainImg = document.getElementById('mainImage');
+  const counter = document.getElementById('carouselCounter');
+  const thumbs = document.querySelectorAll('.media-thumb');
+
+  function showSlide(index) {
+    currentSlide = (index + carouselImages.length) % carouselImages.length;
+    mainImg.src = carouselImages[currentSlide];
+    counter.textContent = (currentSlide + 1) + ' / ' + carouselImages.length;
+    thumbs.forEach((t, i) => t.classList.toggle('active', i === currentSlide));
+  }
+
+  document.getElementById('carouselPrev').addEventListener('click', () => showSlide(currentSlide - 1));
+  document.getElementById('carouselNext').addEventListener('click', () => showSlide(currentSlide + 1));
+  thumbs.forEach(t => t.addEventListener('click', () => showSlide(parseInt(t.dataset.index, 10))));
+  <?php endif; ?>
 </script>
 
 </body>

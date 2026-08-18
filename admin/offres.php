@@ -619,7 +619,7 @@ unset($_SESSION['flash']);
             <td data-label="Vache">
               <div class="vache-cell">
                 <div class="vache-thumb">
-                  <?php if ($thumbUrl = vacheImageUrl($offre['vache_image'] ?? null)): ?>
+                  <?php if ($thumbUrl = vacheFirstImageUrl($offre['vache_image'] ?? null)): ?>
                     <img src="<?php echo htmlspecialchars($thumbUrl); ?>" alt="">
                   <?php else: ?>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke-linecap="round"/><circle cx="12" cy="8" r="4"/></svg>
@@ -663,7 +663,7 @@ unset($_SESSION['flash']);
                   data-vache-age="<?php echo htmlspecialchars(vacheAgeFormatted($offre['date_naissance'] ?? null, $offre['vache_age'] !== null ? (int)$offre['vache_age'] : null)); ?>"
                   data-vache-poids="<?php echo number_format((float)($offre['poids'] ?? 0), 0, ',', ' '); ?>"
                   data-vache-desc="<?php echo htmlspecialchars($offre['vache_description'] ?? ''); ?>"
-                  data-vache-img="<?php echo htmlspecialchars(vacheImageUrl($offre['vache_image'] ?? null) ?? ''); ?>"
+                  data-vache-img="<?php echo htmlspecialchars(vacheFirstImageUrl($offre['vache_image'] ?? null) ?? ''); ?>"
                   data-vache-statut="<?php echo htmlspecialchars($offre['vache_statut'] ?? 'disponible'); ?>"
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
