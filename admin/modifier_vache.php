@@ -5,6 +5,9 @@ require_once __DIR__ . '/../config/database.php';
 
 requireAdmin();
 
+// Auto-migrate bovin column from ENUM to VARCHAR
+ensureBovinColumnIsVarchar($pdo);
+
 $adminNom = $_SESSION['nom'];
 $adminId = (int) $_SESSION['user_id'];
 
@@ -21,6 +24,9 @@ $vache = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$vache) {
     redirect('liste_vaches.php');
 }
+
+$racesDisponibles = getRaces($pdo);
+$bovinsDisponibles = getBovins($pdo);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -461,24 +467,23 @@ if (!$vache) {
           <div class="form-grid">
             <div class="form-group">
               <label for="nom">Race</label>
-              <select id="nom" name="nom" required>
-                <option value="">— Choisir une race —</option>
-                <?php foreach (getRaces() as $race): ?>
-                  <option value="<?php echo htmlspecialchars($race); ?>" <?php echo $vache['nom'] === $race ? 'selected' : ''; ?>>
-                    <?php echo htmlspecialchars($race); ?>
-                  </option>
+              <input type="text" id="nom" name="nom" list="racesList" placeholder="Choisir ou saisir une race" required autocomplete="off" value="<?php echo htmlspecialchars($vache['nom'] ?? ''); ?>">
+              <datalist id="racesList">
+                <?php foreach ($racesDisponibles as $race): ?>
+                  <option value="<?php echo htmlspecialchars($race); ?>">
                 <?php endforeach; ?>
-              </select>
+              </datalist>
+              <span class="hint">Saisissez un nom ou choisissez dans la liste.</span>
             </div>
             <div class="form-group">
-              <label for="bovin">Bovin</label>
-              <select id="bovin" name="bovin" required>
-                <?php foreach (getBovins() as $value => $label): ?>
-                  <option value="<?php echo htmlspecialchars($value); ?>" <?php echo ($vache['bovin'] ?? 'vache') === $value ? 'selected' : ''; ?>>
-                    <?php echo htmlspecialchars($label); ?>
-                  </option>
+              <label for="bovin">Type de bovin</label>
+              <input type="text" id="bovin" name="bovin" list="bovinsList" placeholder="Choisir ou saisir un type" required autocomplete="off" value="<?php echo htmlspecialchars($vache['bovin'] ?? 'Vache'); ?>">
+              <datalist id="bovinsList">
+                <?php foreach ($bovinsDisponibles as $bovin): ?>
+                  <option value="<?php echo htmlspecialchars($bovin); ?>">
                 <?php endforeach; ?>
-              </select>
+              </datalist>
+              <span class="hint">Saisissez un type ou choisissez dans la liste.</span>
             </div>
             <div class="form-group">
               <label for="date_naissance">Date de naissance</label>

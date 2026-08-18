@@ -31,27 +31,88 @@ function requireAcheteur(string $loginPath = '../login.php', string $fallback = 
     }
 }
 
-function getRaces(): array
+function getDefaultRaces(): array
 {
     return ['Holstein', 'Charolaise', 'Montbeliade'];
 }
 
-function getBovins(): array
+function getDefaultBovins(): array
 {
-    return [
-        'vache' => 'Vache',
-        'veau' => 'Veau',
-        'velle' => 'Velle',
-        'genisse' => 'Génisse',
-        'boeuf' => 'Boeuf',
-    ];
+    return ['Vache', 'Veau', 'Velle', 'Génisse', 'Boeuf'];
+}
+
+/**
+ * Get all known races: defaults + any custom ones from the DB.
+ */
+function getRaces(?PDO $pdo = null): array
+{
+    $races = getDefaultRaces();
+
+    if ($pdo !== null) {
+        try {
+            $stmt = $pdo->query("SELECT DISTINCT nom FROM vaches WHERE nom IS NOT NULL AND nom != '' ORDER BY nom");
+            $dbRaces = $stmt ? $stmt->fetchAll(PDO::FETCH_COLUMN) : [];
+            $races = array_values(array_unique(array_merge($races, $dbRaces)));
+        } catch (Exception $e) {
+            // fallback to defaults
+        }
+    }
+
+    sort($races, SORT_STRING | SORT_FLAG_CASE);
+    return $races;
+}
+
+/**
+ * Get all known bovin types: defaults + any custom ones from the DB.
+ * Returns a flat list of labels (e.g. ['Vache', 'Veau', 'Custom Type']).
+ */
+function getBovins(?PDO $pdo = null): array
+{
+    $bovins = getDefaultBovins();
+
+    if ($pdo !== null) {
+        try {
+            $stmt = $pdo->query("SELECT DISTINCT bovin FROM vaches WHERE bovin IS NOT NULL AND bovin != '' ORDER BY bovin");
+            $dbBovins = $stmt ? $stmt->fetchAll(PDO::FETCH_COLUMN) : [];
+            $bovins = array_values(array_unique(array_merge($bovins, $dbBovins)));
+        } catch (Exception $e) {
+            // fallback to defaults
+        }
+    }
+
+    sort($bovins, SORT_STRING | SORT_FLAG_CASE);
+    return $bovins;
 }
 
 function labelBovin(?string $bovin): string
 {
-    $labels = getBovins();
+    if ($bovin === null || $bovin === '') {
+        return 'Vache';
+    }
 
-    return $labels[$bovin] ?? 'Vache';
+    return ucfirst($bovin);
+}
+
+/**
+ * Ensure the bovin column is VARCHAR (not ENUM) so custom values are accepted.
+ */
+function ensureBovinColumnIsVarchar(PDO $pdo): void
+{
+    static $done = false;
+    if ($done) return;
+
+    try {
+        $stmt = $pdo->query("SHOW COLUMNS FROM vaches WHERE Field = 'bovin'");
+        $col = $stmt ? $stmt->fetch(PDO::FETCH_ASSOC) : null;
+
+        if ($col && stripos($col['Type'], 'enum') !== false) {
+            $pdo->exec("ALTER TABLE vaches MODIFY COLUMN bovin VARCHAR(100) DEFAULT 'Vache'");
+        }
+    } catch (Exception $e) {
+        // Silently ignore
+    }
+
+    $done = true;
 }
 
 function uploadVacheImage(array $file): ?string

@@ -10,23 +10,24 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     redirect('../admin/liste_vaches.php');
 }
 
-// Auto-migrate image column to TEXT if needed
+// Auto-migrate database columns if needed
 ensureImageColumnIsText($pdo);
+ensureBovinColumnIsVarchar($pdo);
 
 $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-$nom = trim(filter_input(INPUT_POST, 'nom', FILTER_SANITIZE_SPECIAL_CHARS) ?: '');
-$bovin = $_POST['bovin'] ?? 'vache';
+$nom = trim($_POST['nom'] ?? '');
+$bovin = trim($_POST['bovin'] ?? 'Vache');
+if ($bovin === '') {
+    $bovin = 'Vache';
+}
+
 $dateNaissance = parseDateNaissance(trim($_POST['date_naissance'] ?? ''));
 $poids = filter_input(INPUT_POST, 'poids', FILTER_VALIDATE_FLOAT);
 $description = trim($_POST['description'] ?? '');
 $statut = $_POST['statut'] ?? 'disponible';
 
-if (!$id || $nom === '' || !in_array($nom, getRaces(), true) || $dateNaissance === null) {
+if (!$id || $nom === '' || $dateNaissance === null) {
     redirect('../admin/liste_vaches.php');
-}
-
-if (!array_key_exists($bovin, getBovins())) {
-    $bovin = 'vache';
 }
 
 if (!in_array($statut, ['disponible', 'vendue'], true)) {
