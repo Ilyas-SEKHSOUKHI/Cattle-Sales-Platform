@@ -1,0 +1,23 @@
+# Fichiers d'environnement & secrets
+.env
+.env.local
+.env.*.local
+
+# Dépendances Composer
+/vendor/
+
+# Fichiers médias téléversés (conserver le dossier)
+/uploads/vaches/*
+!/uploads/vaches/.gitkeep
+
+# Fichiers système & IDE
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Fichiers temporaires PHP
+*.tmp

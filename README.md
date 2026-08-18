@@ -125,24 +125,29 @@ Projet réalisé dans le cadre d'un stage chez **Jibal**.
 
    Cela crée la base `tarmast_db`, les tables `utilisateurs`, `vaches` (compatible multi-photos et races dynamiques), `offres`, `factures`, ainsi qu'un compte administrateur par défaut.
 
-4. **Configurer la connexion à la base de données**
+4. **Configurer les variables d'environnement**
 
-   Vérifier et adapter `config/database.php` si nécessaire (hôte, utilisateur, mot de passe).
+   Copier le fichier exemple `.env.example` vers `.env` et ajuster vos paramètres de base de données et d'envoi d'emails (Mailtrap) :
+   ```bash
+   cp .env.example .env
+   ```
 
-5. **Configurer l'envoi d'emails**
+   Contenu de `.env` :
+   ```env
+   DB_HOST=localhost
+   DB_PORT=3306
+   DB_NAME=tarmast_db
+   DB_USER=root
+   DB_PASS=
 
-   Renseigner vos identifiants Mailtrap dans `config/smtp.php` :
-   ```php
-   $smtpConfig = [
-       'enabled'  => true,
-       'host'     => 'live.smtp.mailtrap.io',
-       'port'     => 587,
-       'username' => 'api',
-       'password' => 'VOTRE_CLE_API_MAILTRAP',
-       'encryption'  => 'tls',
-       'from_email'  => 'no-reply@tarmast.ma',
-       'from_name'   => 'Ferme Tarmast',
-   ];
+   SMTP_ENABLED=true
+   SMTP_HOST=live.smtp.mailtrap.io
+   SMTP_PORT=587
+   SMTP_USER=api
+   SMTP_PASS=VOTRE_CLE_API_MAILTRAP
+   SMTP_ENCRYPTION=tls
+   SMTP_FROM_EMAIL=no-reply@tarmast.ma
+   SMTP_FROM_NAME="Ferme Tarmast"
    ```
 
 6. **Lancer l'application**
