@@ -149,7 +149,7 @@ $numFactureRecap = 'RECAP-' . date('Ym') . '-' . str_pad((string)$premier['achet
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;600;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="../assets/images/iconVache.png">
 <title>Facture Récapitulative <?php echo htmlspecialchars($numFactureRecap); ?> — Ferme Tarmast</title>
 <style>
@@ -164,7 +164,7 @@ $numFactureRecap = 'RECAP-' . date('Ym') . '-' . str_pad((string)$premier['achet
     --ink-soft: #5C5B52;
     --line: #E3D9C2;
     --display: "Fraunces", Georgia, serif;
-    --body: "Work Sans", Arial, sans-serif;
+    --body: "Work Sans", Arial, Helvetica, sans-serif;
   }
 
   * { margin:0; padding:0; box-sizing:border-box; }
@@ -502,7 +502,7 @@ $numFactureRecap = 'RECAP-' . date('Ym') . '-' . str_pad((string)$premier['achet
         $ht = $ttc; // TVA 0%
       ?>
       <tr>
-        <td class="text-center" style="font-weight:700; color:var(--forest); font-family:monospace; font-size:.85rem;">
+        <td class="text-center" style="font-weight:700; color:var(--forest); font-size:.85rem;">
           <?php echo 'BOV-' . str_pad((string)$fact['id_vache'], 4, '0', STR_PAD_LEFT); ?>
         </td>
         <td><?php echo htmlspecialchars(labelBovin($fact['bovin'])); ?></td>
