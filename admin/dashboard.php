@@ -34,7 +34,9 @@ $revenuTotal = (float) $sumStmt->fetchColumn();
 
 $offresStmt = $pdo->prepare(
     'SELECT o.id, o.montant_propose AS montant, o.date_offre AS date, o.statut,
-            u.nom AS acheteur, u.email, u.telephone, v.nom AS vache
+            u.nom AS acheteur, u.email, u.telephone,
+            v.id AS id_vache, v.nom AS vache, v.bovin, v.date_naissance, v.age AS vache_age,
+            v.poids, v.description AS vache_description, v.image AS vache_image, v.statut AS vache_statut
      FROM offres o
      JOIN utilisateurs u ON o.id_utilisateur = u.id
      JOIN vaches v ON o.id_vache = v.id
@@ -322,6 +324,132 @@ $offresRecentes = $offresStmt->fetchAll(PDO::FETCH_ASSOC);
     font-size: .92rem;
   }
 
+  /* ---------- FICHE VACHE MODAL ---------- */
+  .fiche-overlay{
+    position:fixed; inset:0;
+    background: rgba(20,42,32,.55);
+    display:grid; place-items:center;
+    padding:1rem; z-index:250;
+    animation: fadeIn .2s ease;
+  }
+  .fiche-overlay[hidden]{ display:none; }
+  @keyframes fadeIn{ from{ opacity:0; } to{ opacity:1; } }
+  @keyframes slideUp{ from{ transform:translateY(24px); opacity:0; } to{ transform:translateY(0); opacity:1; } }
+  .fiche-dialog{
+    width: min(520px, 100%);
+    max-height: 90vh;
+    overflow-y:auto;
+    background:#fff;
+    border-radius:18px;
+    border:1px solid var(--line);
+    box-shadow: 0 22px 48px rgba(20,42,32,.25);
+    animation: slideUp .25s ease;
+  }
+  .fiche-hero{
+    position:relative;
+    height:200px;
+    background: linear-gradient(135deg, #3f8f42 0%, #173425 100%);
+    border-radius:18px 18px 0 0;
+    overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .fiche-hero img{ width:100%; height:100%; object-fit:cover; }
+  .fiche-hero .no-img{ color:rgba(255,255,255,.3); }
+  .fiche-hero .no-img svg{ width:64px; height:64px; }
+  .fiche-close{
+    position:absolute; top:.7rem; right:.7rem;
+    width:34px; height:34px;
+    border-radius:50%;
+    background: rgba(0,0,0,.35);
+    backdrop-filter:blur(4px);
+    border:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    color:#fff;
+    transition: background .18s;
+  }
+  .fiche-close:hover{ background: rgba(0,0,0,.55); }
+  .fiche-close svg{ width:18px; height:18px; }
+  .fiche-badge-status{
+    position:absolute; bottom:.7rem; left:.7rem;
+    padding:.3rem .75rem;
+    border-radius:999px;
+    font-size:.74rem;
+    font-weight:700;
+    backdrop-filter:blur(6px);
+  }
+  .fiche-badge-status.disponible{ background:rgba(76,175,80,.85); color:#fff; }
+  .fiche-badge-status.vendue{ background:rgba(201,144,47,.85); color:#fff; }
+  .fiche-body{ padding:1.4rem 1.5rem 1.6rem; }
+  .fiche-title{
+    font-family: var(--display);
+    font-size:1.25rem;
+    font-weight:700;
+    color: var(--forest);
+    margin-bottom:.15rem;
+  }
+  .fiche-type{
+    font-size:.82rem;
+    color: var(--ink-soft);
+    margin-bottom:1.1rem;
+  }
+  .fiche-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:.7rem;
+    margin-bottom:1.1rem;
+  }
+  .fiche-stat{
+    background: var(--cream);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:.65rem .8rem;
+  }
+  .fiche-stat-label{
+    font-size:.68rem;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    color: var(--ink-soft);
+    font-weight:700;
+    margin-bottom:.15rem;
+  }
+  .fiche-stat-value{
+    font-family: var(--display);
+    font-size:1rem;
+    font-weight:600;
+    color: var(--forest);
+  }
+  .fiche-desc-title{
+    font-size:.78rem;
+    font-weight:700;
+    color: var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    margin-bottom:.35rem;
+  }
+  .fiche-desc-text{
+    font-size:.88rem;
+    color: var(--ink);
+    line-height:1.55;
+  }
+  .btn-voir-fiche{
+    border:none;
+    border-radius:7px;
+    padding:.35rem .6rem;
+    font-size:.74rem;
+    font-weight:700;
+    cursor:pointer;
+    font-family: var(--body);
+    background: var(--cream-2);
+    color: var(--forest);
+    border:1px solid var(--line);
+    transition: background .18s, border-color .18s;
+    display:inline-flex;
+    align-items:center;
+    gap:.25rem;
+  }
+  .btn-voir-fiche:hover{ background:#EADFC4; border-color:#D0C4A8; }
+  .btn-voir-fiche svg{ width:14px; height:14px; }
+
   /* ---------- RESPONSIVE ---------- */
   @media (max-width: 980px){
     .layout{ grid-template-columns: 1fr; }
@@ -503,8 +631,21 @@ $offresRecentes = $offresStmt->fetchAll(PDO::FETCH_ASSOC);
               </span>
             </td>
             <td data-label="Actions">
-              <?php if ($offre['statut'] === 'en_attente'): ?>
               <div class="row-actions">
+                <button type="button" class="btn-voir-fiche open-fiche-modal"
+                  data-vache-nom="<?php echo htmlspecialchars($offre['vache']); ?>"
+                  data-vache-bovin="<?php echo htmlspecialchars(labelBovin($offre['bovin'] ?? 'vache')); ?>"
+                  data-vache-id="<?php echo (int)$offre['id_vache']; ?>"
+                  data-vache-age="<?php echo htmlspecialchars(vacheAgeFormatted($offre['date_naissance'] ?? null, $offre['vache_age'] !== null ? (int)$offre['vache_age'] : null)); ?>"
+                  data-vache-poids="<?php echo number_format((float)($offre['poids'] ?? 0), 0, ',', ' '); ?>"
+                  data-vache-desc="<?php echo htmlspecialchars($offre['vache_description'] ?? ''); ?>"
+                  data-vache-img="<?php echo htmlspecialchars(vacheImageUrl($offre['vache_image'] ?? null) ?? ''); ?>"
+                  data-vache-statut="<?php echo htmlspecialchars($offre['vache_statut'] ?? 'disponible'); ?>"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  Fiche
+                </button>
+                <?php if ($offre['statut'] === 'en_attente'): ?>
                 <form action="../actions/accepter_offre.php" method="POST">
                   <input type="hidden" name="id_offre" value="<?php echo (int)$offre['id']; ?>">
                   <button type="submit" class="btn-mini accept">Accepter</button>
@@ -513,10 +654,10 @@ $offresRecentes = $offresStmt->fetchAll(PDO::FETCH_ASSOC);
                   <input type="hidden" name="id_offre" value="<?php echo (int)$offre['id']; ?>">
                   <button type="submit" class="btn-mini refuse">Refuser</button>
                 </form>
+                <?php else: ?>
+                <span style="color:var(--ink-soft); font-size:.85rem;">—</span>
+                <?php endif; ?>
               </div>
-              <?php else: ?>
-              <span style="color:var(--ink-soft); font-size:.85rem;">—</span>
-              <?php endif; ?>
             </td>
           </tr>
           <?php endforeach; ?>
@@ -529,6 +670,94 @@ $offresRecentes = $offresStmt->fetchAll(PDO::FETCH_ASSOC);
 
   </main>
 </div>
+
+<!-- ================= FICHE VACHE MODAL ================= -->
+<div id="ficheVacheModal" class="fiche-overlay" hidden>
+  <div class="fiche-dialog" role="dialog" aria-modal="true" aria-labelledby="ficheVacheTitle">
+    <div class="fiche-hero">
+      <div id="ficheHeroContent"></div>
+      <button type="button" class="fiche-close" id="ficheCloseBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <span id="ficheBadgeStatus" class="fiche-badge-status"></span>
+    </div>
+    <div class="fiche-body">
+      <div class="fiche-title" id="ficheVacheTitle"></div>
+      <div class="fiche-type" id="ficheVacheType"></div>
+      <div class="fiche-grid">
+        <div class="fiche-stat">
+          <div class="fiche-stat-label">Âge</div>
+          <div class="fiche-stat-value" id="ficheAge"></div>
+        </div>
+        <div class="fiche-stat">
+          <div class="fiche-stat-label">Poids</div>
+          <div class="fiche-stat-value" id="fichePoids"></div>
+        </div>
+        <div class="fiche-stat">
+          <div class="fiche-stat-label">Fiche N°</div>
+          <div class="fiche-stat-value" id="ficheNumero"></div>
+        </div>
+        <div class="fiche-stat">
+          <div class="fiche-stat-label">Statut</div>
+          <div class="fiche-stat-value" id="ficheStatut"></div>
+        </div>
+      </div>
+      <div id="ficheDescBlock" style="display:none;">
+        <div class="fiche-desc-title">Description</div>
+        <div class="fiche-desc-text" id="ficheDesc"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const ficheModal = document.getElementById('ficheVacheModal');
+  const ficheCloseBtn = document.getElementById('ficheCloseBtn');
+  const ficheHero = document.getElementById('ficheHeroContent');
+  const ficheBadge = document.getElementById('ficheBadgeStatus');
+  const ficheTitle = document.getElementById('ficheVacheTitle');
+  const ficheType = document.getElementById('ficheVacheType');
+  const ficheAge = document.getElementById('ficheAge');
+  const fichePoids = document.getElementById('fichePoids');
+  const ficheNumero = document.getElementById('ficheNumero');
+  const ficheStatut = document.getElementById('ficheStatut');
+  const ficheDescBlock = document.getElementById('ficheDescBlock');
+  const ficheDesc = document.getElementById('ficheDesc');
+
+  const openFicheModal = (btn) => {
+    const d = btn.dataset;
+    if (d.vacheImg) {
+      ficheHero.innerHTML = '<img src="' + d.vacheImg + '" alt="">';
+    } else {
+      ficheHero.innerHTML = '<div class="no-img"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke-linecap="round"/><circle cx="12" cy="8" r="4"/></svg></div>';
+    }
+    ficheBadge.textContent = d.vacheStatut === 'vendue' ? 'Vendue' : 'Disponible';
+    ficheBadge.className = 'fiche-badge-status ' + (d.vacheStatut || 'disponible');
+    ficheTitle.textContent = d.vacheNom;
+    ficheType.textContent = d.vacheBovin + ' · Fiche N°' + d.vacheId;
+    ficheAge.textContent = d.vacheAge || 'Non renseigné';
+    fichePoids.textContent = (d.vachePoids || '0') + ' kg';
+    ficheNumero.textContent = d.vacheId;
+    ficheStatut.textContent = d.vacheStatut === 'vendue' ? 'Vendue' : 'Disponible';
+    if (d.vacheDesc && d.vacheDesc.trim()) {
+      ficheDescBlock.style.display = 'block';
+      ficheDesc.textContent = d.vacheDesc;
+    } else {
+      ficheDescBlock.style.display = 'none';
+    }
+    ficheModal.hidden = false;
+  };
+
+  const closeFicheModal = () => { ficheModal.hidden = true; };
+
+  document.querySelectorAll('.open-fiche-modal').forEach(btn => {
+    btn.addEventListener('click', () => openFicheModal(btn));
+  });
+
+  ficheCloseBtn.addEventListener('click', closeFicheModal);
+  ficheModal.addEventListener('click', (e) => { if (e.target === ficheModal) closeFicheModal(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !ficheModal.hidden) closeFicheModal(); });
+</script>
 
 </body>
 </html>
